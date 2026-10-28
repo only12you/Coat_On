@@ -656,7 +656,7 @@ function tabRep() {
   return '<div id="repCtl"><div class="x-card"><div class="x-h">보고서 정보</div><div class="x-g2">' + m('cust', '고객사') + m('vend', '제안사') + m('who', '작성자') + m('title', '보고서 제목 (선택)') + '</div></div>' +
     trkCard() + '<div class="x-seg"><button data-a="doc" data-v="main" class="' + (S.doc === 'main' ? 'on' : '') + '">분석 보고서</button><button data-a="doc" data-v="trk" class="' + (S.doc === 'trk' ? 'on' : '') + '">실적자료 (별도)</button></div>' +
     '<div class="x-acts"><button class="x-bt p" data-a="print">A4 인쇄</button><button class="x-bt p" data-a="pdf">PDF 저장</button><button class="x-bt" data-a="xls">엑셀 저장</button></div>' +
-    (br.length ? '<div class="x-card"><div class="x-h">도장 시스템에 적용</div><div class="x-row"><label class="x-f"><span>적용할 코트</span><select id="lyr">' + br.map((l) => '<option value="' + l.i + '">' + esc(l.lb || '') + ' · ' + esc(l.n) + '</option>').join('') + '</select></label><button class="x-bt p" data-a="apply">제안 제품으로 변경</button></div><p class="x-note">제품 DB에 같은 이름의 제품이 있을 때 적용됩니다.</p></div>' : '') + '</div>' +
+    '' + '</div>' +
     '<div id="repWrap"><div id="pgw"><div class="x-pgs" id="pgs">' + (S.doc === 'trk' ? tracksHtml() : reportHtml()) + '</div></div></div>';
 }
 function fit() { const w = document.getElementById('pgw'), s = document.getElementById('pgs'); if (!w || !s) return; const sc = Math.min(1, w.clientWidth / 794); s.style.transform = 'scale(' + sc + ')'; w.style.height = Math.ceil(s.scrollHeight * sc) + 'px'; }
