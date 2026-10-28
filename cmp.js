@@ -642,11 +642,19 @@ function tracksHtml0() {
   const body = idx.map((i) => '<div class="x-h2" style="color:' + COL[i] + '">' + rl(i) + ' · ' + esc(pn(i)) + ' (' + lst(S.ps[i].tracks).length + '건)</div>' + (lst(S.ps[i].tracks).length ? '<ol class="x-ol">' + lst(S.ps[i].tracks).map((t) => '<li>' + esc(t) + '</li>').join('') + '</ol>' : '<p class="x-na">등록된 실적이 없습니다.</p>')).join('');
   const t = S.meta.title; S.meta.title = '시공 실적 자료'; const h = pg(1, 1, '시공 실적 자료', body || '<p class="x-na">실적 정보가 없습니다. 제품의 추출값 확인 화면에서 실적을 입력하거나 실적 파일을 첨부하세요.</p>'); S.meta.title = t; return h;
 }
+function trkCard() {
+  const idx = [S.ours, 0].concat(S.ps.map((_, i) => i)).filter((i, k, a) => a.indexOf(i) === k && S.ps[i] && (has(S.ps[i]) || lst(S.ps[i].tracks).length || i === S.ours || i === 0));
+  const one = (i) => { const n = lst(S.ps[i].tracks).length; return '<div class="r-trk"><div class="x-h2" style="color:' + COL[i] + '">' + rl(i) + ' · ' + esc(pn(i)) + ' <small>(' + n + '건)</small></div>' +
+    '<div class="x-row r-trkadd"><input id="tk_n' + i + '" placeholder="현장명 (예: ○○아파트 외벽)"><input id="tk_a' + i + '" placeholder="면적 (㎡)" inputmode="decimal"><input id="tk_y' + i + '" placeholder="연도" inputmode="numeric"><input id="tk_c' + i + '" placeholder="발주처 (선택)"><button class="x-bt p" data-a="trkadd" data-i="' + i + '">추가</button></div>' +
+    '<textarea class="r-trkta" data-f="tracks" data-i="' + i + '" rows="4" placeholder="한 줄에 1건 · 예) ○○아파트 외벽 · 12,000㎡ · 2024 · ○○건설">' + esc(S.ps[i].tracks || '') + '</textarea>' +
+    '<div class="x-acts"><button class="x-bt" data-a="trk" data-i="' + i + '">실적 파일 불러오기 (PDF·엑셀·사진)</button>' + (n ? '<button class="x-bt" data-a="trkclr" data-i="' + i + '">모두 지우기</button>' : '') + '</div></div>'; };
+  return '<div class="x-card"><div class="x-h">시공 실적자료 입력</div><p class="x-note">입력한 실적은 분석 보고서 부록 A(최대 8건)와 ‘실적자료 (별도)’ 출력에 들어가고, 신뢰도 점수에도 반영됩니다.</p>' + idx.map(one).join('') + '</div>';
+}
 function tabRep() {
   const m = (k, lab) => '<label class="x-f"><span>' + lab + '</span><input data-m="' + k + '" value="' + esc(S.meta[k]) + '"></label>';
   const br = window.parent && window.parent.CMPB && window.parent.CMPB.layers ? (() => { try { return window.parent.CMPB.layers(); } catch (e) { return []; } })() : [];
   return '<div id="repCtl"><div class="x-card"><div class="x-h">보고서 정보</div><div class="x-g2">' + m('cust', '고객사') + m('vend', '제안사') + m('who', '작성자') + m('title', '보고서 제목 (선택)') + '</div></div>' +
-    '<div class="x-seg"><button data-a="doc" data-v="main" class="' + (S.doc === 'main' ? 'on' : '') + '">분석 보고서</button><button data-a="doc" data-v="trk" class="' + (S.doc === 'trk' ? 'on' : '') + '">실적자료 (별도)</button></div>' +
+    trkCard() + '<div class="x-seg"><button data-a="doc" data-v="main" class="' + (S.doc === 'main' ? 'on' : '') + '">분석 보고서</button><button data-a="doc" data-v="trk" class="' + (S.doc === 'trk' ? 'on' : '') + '">실적자료 (별도)</button></div>' +
     '<div class="x-acts"><button class="x-bt p" data-a="print">A4 인쇄</button><button class="x-bt p" data-a="pdf">PDF 저장</button><button class="x-bt" data-a="xls">엑셀 저장</button></div>' +
     (br.length ? '<div class="x-card"><div class="x-h">도장 시스템에 적용</div><div class="x-row"><label class="x-f"><span>적용할 코트</span><select id="lyr">' + br.map((l) => '<option value="' + l.i + '">' + esc(l.lb || '') + ' · ' + esc(l.n) + '</option>').join('') + '</select></label><button class="x-bt p" data-a="apply">제안 제품으로 변경</button></div><p class="x-note">제품 DB에 같은 이름의 제품이 있을 때 적용됩니다.</p></div>' : '') + '</div>' +
     '<div id="repWrap"><div id="pgw"><div class="x-pgs" id="pgs">' + (S.doc === 'trk' ? tracksHtml() : reportHtml()) + '</div></div></div>';
@@ -859,6 +867,8 @@ function init() {
     else if (a === 'add') { S.ps.push(blank()); save(); S.keepY = true; render(); }
     else if (a === 'del') { S.ps.splice(i, 1); if (S.ours >= S.ps.length || S.ours === i) S.ours = 1; else if (S.ours > i) S.ours--; S.open = -1; save(); S.keepY = true; render(); }
     else if (a === 'clear') { const id = S.ps[i].id; S.ps[i] = { ...blank(), id }; save(); S.keepY = true; render(); }
+    else if (a === 'trkadd') { const g = (k) => (($('#tk_' + k + i) || {}).value || '').trim(), n = g('n'); if (!n) return toast('현장명을 입력하세요'); const ar = g('a').replace(/[^\d.,]/g, ''), ln = [n, ar ? ar + '㎡' : '', g('y') ? g('y').replace(/[^\d]/g, '') + (/\d{4}/.test(g('y')) ? '' : '') : '', g('c')].filter(Boolean).join(' · '); S.ps[i].tracks = (S.ps[i].tracks ? S.ps[i].tracks.replace(/\s+$/, '') + '\n' : '') + ln; save(); S.keepY = true; render(); toast('실적을 추가했습니다'); }
+    else if (a === 'trkclr') { S.ps[i].tracks = ''; save(); S.keepY = true; render(); }
     else if (a === 'doc') { S.doc = b.dataset.v; render(); }
     else if (a === 'print') doPrint(); else if (a === 'pdf') doPdf(); else if (a === 'xls') doXls();
     else if (a === 'apply') { try { const B = window.parent.CMPB, M = calcAll(S), c = M.C[S.ours]; const r = B.apply(+$('#lyr').value, S.ps[S.ours].name, c ? c.priceL : 0); toast(r.ok ? '도장 시스템에 적용했습니다' : r.msg); } catch (x) { toast('적용하지 못했습니다'); } }
@@ -868,7 +878,7 @@ function init() {
     save(); live();
   });
   document.addEventListener('change', (e) => {
-    const t = e.target; if (t.dataset.m && S.tab === 'rep') { const y = window.scrollY; render(); window.scrollTo(0, y); return; }
+    const t = e.target; if (t.dataset.f === 'tracks' && S.tab === 'rep') { setTimeout(() => { S.keepY = true; render(); }, 0); return; } if (t.dataset.m && S.tab === 'rep') { const y = window.scrollY; render(); window.scrollTo(0, y); return; }
     if (t.id === 'fi' || t.id === 'fc' || t.id === 'ft') { const f = t.files && t.files[0]; t.value = ''; if (f) attach(S.tgt, f, t.id === 'ft' ? 'trk' : ''); }
   });
   window.addEventListener('resize', fit);
