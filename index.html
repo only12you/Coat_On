@@ -3086,7 +3086,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v504',d:'2026.10.28'};
+const APPV={v:'v505',d:'2026.10.28'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -7285,7 +7285,7 @@ function sitePanel0(){const B=HQ.blds,T=HQ.types,g=glob(HQ);
  ${SXE?`<div class="sxc kv"><div class="sxe"><div class="sxt" style="margin:0;flex:1"><i>${I('bld')}</i><b>단지 기본 정보</b></div><button type="button" class="sxed" onclick="sxEdit()">${SX.pn}<span>완료</span></button></div>${kvIn('단지명','name','단지 이름',HQ.name)+kvIn('주소','addr','주소',addr)+kvPlan()+kvIn('준공연도','year','예: 2010년',HQ.year)}<button type="button" class="mkdb" onclick="aptDbOpen()">${SX.sr}<span>단지 DB에서 검색해 채우기</span></button></div>`:''}
  ${segHtml()}${SXTAB==1?planTab():SXTAB==2?secTab():`<details class="sxc sxd" ${HQ.od&&HQ.od.b===0?'':'open'} ontoggle="hqO('b',this.open)"><summary>${ttl(I('bld'),'동별 층수','<small class="r">'+B.length+'개 동</small>')}${sxIc('<path d="M6 9l6 6 6-6"/>')}</summary><div class="sxdg"><div class="sxlf"><div class="sxh"><span>동명</span><span>지상</span><span>지하</span><span></span></div>${bl}</div></div><button type="button" class="sxadd" onclick="hqBA()">${SX.pl}<span>동 추가</span></button></details>`}
  <div class="sxc">${ttl(SX.ly,'세대 타입','<small class="r">(공급면적 · 세대수)</small>')}<div class="sxh t"><span>공급면적(㎡)</span><span>세대수</span><span></span></div>${tl}${T.length<30?`<button type="button" class="sxadd" onclick="hqTA()">${SX.pl}<span>세대 타입 추가</span></button>`:''}</div>
- ${(()=>{const row=t=>{const c=(CH.find(x=>x[0]==t)||[])[2];return `<div class="sxk"><label class="sxck"><input type="checkbox" ${inc(t)?'checked':''} onchange="hqInc('${t}',this.checked)"><i></i></label><button type="button" class="sxg" onclick="hqType('${t}')"><span class="zit">${c?I(c):''}</span><span>${TYN[t]}</span><b>${won(C(t).c.G)}원</b>${SX.ch}</button></div>`},card=(l,a)=>`<div class="sxc zlist"><div class="zlh"><b>${l}</b><em>${a.length}건</em></div>${a.map(row).join('')}</div>`;return card('기본 공사 항목',WT.slice(0,3))+card('추가 공사 항목',WT.slice(3))})()}
+ ${(()=>{const row=t=>{const c=(CH.find(x=>x[0]==t)||[])[2];return `<div class="sxk"><label class="sxck"><input type="checkbox" ${inc(t)?'checked':''} onchange="hqInc('${t}',this.checked)"><i></i></label><button type="button" class="sxg" onclick="hqType('${t}')"><span class="zit">${c?I(c):''}</span><span>${TYN[t]}</span><b>${won(C(t).c.G)}원</b>${SX.ch}</button></div>`},card=(l,a,f)=>`<div class="sxc zlist${f?' zfold'+(window.HQX===false?'':' fold'):''}"><div class="zlh"${f?' onclick="this.parentNode.classList.toggle(\'fold\');window.HQX=this.parentNode.classList.contains(\'fold\')" style="cursor:pointer"':''}><b>${l}</b><em>${a.length}건</em>${f?'<svg class="zfa" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>':''}</div><div class="zbd">${a.map(row).join('')}</div></div>`;return card('기본 공사 항목',WT.slice(0,4))+card('추가 공사 항목',WT.slice(4),1)})()}
  ${stdHtml()}`}
 const kvr=(l,v)=>`<div class="kvr"><span>${l}</span><b>${v}</b></div>`;const kvIn=(l,k,ph,v)=>`<div class="kvr"><span>${l}</span><input type="text" class="kvi" value="${esc(v||'')}" placeholder="${ph}" oninput="hqS('${k}',this.value)"></div>`,kvPlan=()=>`<div class="kvr"><span>평면 형식</span><select class="kvi" onchange="hqPlan(this.value)"><option value="1"${HQ.plan=='1'?' selected':''}>계단실형 (계단식)</option><option value="2"${HQ.plan=='2'?' selected':''}>복도형</option></select></div>`;
 window.sxTab=i=>{SXTAB=i;rerender()};window.sxSel2=i=>{SXSEL=i;rerender()};
@@ -9341,6 +9341,7 @@ html body #hq .zlh{display:flex;align-items:center;padding:calc(var(--u)*20) cal
 html body #hq .zlh b{font:800 calc(var(--u)*29)/1.2 "Noto Sans KR",system-ui,sans-serif;color:#10264f}
 html body #hq .zlh em{margin-left:auto;font:700 calc(var(--u)*21)/1 "Noto Sans KR",system-ui,sans-serif;font-style:normal;color:#5b6c8c;background:#e6edf9;border-radius:99px;padding:calc(var(--u)*9) calc(var(--u)*17)}
 html body #hq .zlist .sxk{border:0;border-bottom:1px solid #e8eef8;border-radius:0;background:transparent;margin:0 calc(var(--u)*18);padding:0 calc(var(--u)*6);min-height:calc(var(--u)*80);gap:calc(var(--u)*18)}
+html body #hq .zlist.fold .zbd{display:none}html body #hq .zlh .zfa{margin-left:calc(var(--u)*12);color:#5b6c8c;transition:transform .2s}html body #hq .zlist.zfold:not(.fold) .zfa{transform:rotate(180deg)}
 html body #hq .zlist .sxk:last-child{border-bottom:0;margin-bottom:calc(var(--u)*6)}
 html body #hq .zlist .sxck{width:calc(var(--u)*40);height:calc(var(--u)*40)}
 html body #hq .zlist .sxck i{border:2px solid #b9c7e0}
