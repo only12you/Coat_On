@@ -655,14 +655,14 @@ function tabRep() {
   const br = window.parent && window.parent.CMPB && window.parent.CMPB.layers ? (() => { try { return window.parent.CMPB.layers(); } catch (e) { return []; } })() : [];
   return '<div id="repCtl"><div class="x-card"><div class="x-h">보고서 정보</div><div class="x-g2">' + m('cust', '고객사') + m('vend', '제안사') + m('who', '작성자') + m('title', '보고서 제목 (선택)') + '</div></div>' +
     trkCard() + '<div class="x-seg"><button data-a="doc" data-v="main" class="' + (S.doc === 'main' ? 'on' : '') + '">분석 보고서</button><button data-a="doc" data-v="trk" class="' + (S.doc === 'trk' ? 'on' : '') + '">실적자료 (별도)</button></div>' +
-    '<div class="x-acts"><button class="x-bt p" data-a="print">A4 인쇄</button><button class="x-bt p" data-a="pdf">PDF 저장</button><button class="x-bt" data-a="xls">엑셀 저장</button></div>' +
+    '<div class="x-acts"><button class="x-bt p" data-a="print">A4 인쇄</button><button class="x-bt p" data-a="pdf">PDF 저장</button><button class="x-bt" data-a="xls">엑셀 저장</button><button class="x-bt" data-a="docx">워드 저장</button></div>' +
     '' + '</div>' +
     '<div id="repWrap"><div id="pgw"><div class="x-pgs" id="pgs">' + (S.doc === 'trk' ? tracksHtml() : reportHtml()) + '</div></div></div>';
 }
 function fit() { const w = document.getElementById('pgw'), s = document.getElementById('pgs'); if (!w || !s) return; const sc = Math.min(1, w.clientWidth / 794); s.style.transform = 'scale(' + sc + ')'; w.style.height = Math.ceil(s.scrollHeight * sc) + 'px'; }
 
 /* ---------- 파일 처리 ---------- */
-const LIBS = { xlsx: ['XLSX', 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'], pdf: ['pdfjsLib', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'], h2c: ['html2canvas', 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'], jspdf: ['jspdf', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'], tess: ['Tesseract', 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'] };
+const LIBS = { xlsx: ['XLSX', 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'], pdf: ['pdfjsLib', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'], h2c: ['html2canvas', 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'], jspdf: ['jspdf', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'], jszip: ['JSZip', 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'], tess: ['Tesseract', 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'] };
 async function lib(k) {
   const [g, u] = LIBS[k]; let o = window[g]; try { o = o || window.parent[g]; } catch (e) {}
   if (!o) { await new Promise((res, rej) => { const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = () => rej(new Error('lib')); document.head.appendChild(s); }); o = window[g]; }
@@ -831,11 +831,144 @@ function rowsFor(M) {
   [['제품 특징', 'desc'], ['용도', 'usage'], ['기능', 'func'], ['성분', 'comp'], ['성능', 'perf'], ['건조시간', 'dry'], ['가사시간', 'pot'], ['인증서', 'certs']].forEach((r) => A.push([r[0], ...cs.map((i) => S.ps[i][r[1]] || '')]));
   return A;
 }
-async function doXls() {
-  const M = calcAll(S); if (!ready(M)) return toast('데이터시트를 먼저 첨부하세요'); const A = rowsFor(M);
-  try { const X = await lib('xlsx'); const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(A), '비교표'); const T = [['제품', '시공 실적']]; S.ps.forEach((p, i) => lst(p.tracks).forEach((t) => T.push([rl(i) + ' ' + pn(i), t]))); X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(T), '실적'); const SR = [['제품', '항목', '값', '출처']]; colsOf(M).forEach((i) => { const p = S.ps[i]; [['svr', '고형분 SVR'], ['dft', '표준 도막'], ['cov', '이론 도포면적'], ['pack', '캔 용량'], ['price', '캔당 단가'], ['dry', '건조시간'], ['recoat', '재도장 간격'], ['pot', '가사시간'], ['env', '적용 온도·습도'], ['method', '도장 방법'], ['voc', 'VOC'], ['heat', '내열온도'], ['life', '보수주기'], ['iso', 'ISO 12944'], ['certs', '인증서']].forEach(([k, l]) => { const sv = srcOf(p, k); if (sv) SR.push([rl(i) + ' ' + pn(i), l, p[k], sv]); }); lst(p.perf).forEach((ln) => SR.push([rl(i) + ' ' + pn(i), '성능', ln, perfSrc(p, ln)])); }); X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(SR), '값의 출처'); X.writeFile(wb, '제품비교.xlsx'); toast('엑셀 파일을 저장했습니다'); }
-  catch (e) { const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; const b = new Blob(['\ufeff' + A.map((r) => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '제품비교.csv'; document.body.appendChild(a); a.click(); a.remove(); toast('CSV로 저장했습니다'); }
+/* ---------- v513 엑셀 · 워드 출력 (PDF 보고서와 같은 구성) ---------- */
+const BLK = 'DIV,P,UL,OL,TABLE,SVG,H1,H2,H3,SECTION,HEADER,FOOTER,LI';
+const tx = (e) => (e.textContent || '').replace(/\s+/g, ' ').trim();
+/* 보고서 쪽 → 블록 목록 [{t:'h1'|'h2'|'p'|'li'|'tbl'|'img', ...}] */
+function pageBlocks(pg) {
+  const out = [], root = pg.querySelector('.x-pbi') || pg;
+  const hasBlk = (e) => [...e.children].some((c) => BLK.split(',').includes(c.tagName.toUpperCase()));
+  const runs = (e) => { const r = []; const w = (n, b) => { if (n.nodeType === 3) { const t = n.nodeValue.replace(/\s+/g, ' '); if (t.trim() || t === ' ') r.push({ t, b }); } else if (n.nodeType === 1) { const bb = b || /^(B|STRONG|TH)$/i.test(n.tagName) || +getComputedStyle(n).fontWeight >= 700; [...n.childNodes].forEach((c) => w(c, bb)); } }; [...e.childNodes].forEach((c) => w(c, false)); return r; };
+  const walk = (e) => {
+    const tg = e.tagName.toUpperCase(); if (e.hidden) return;
+    if (tg === 'SVG') { out.push({ t: 'img', el: e }); return; }
+    if (tg === 'TABLE') { const rows = [...e.rows].map((r) => [...r.cells].map((c) => ({ t: tx(c), h: c.tagName === 'TH', cs: c.colSpan || 1 }))); out.push({ t: 'tbl', rows }); return; }
+    if (tg === 'H1') { out.push({ t: 'h1', s: tx(e) }); return; }
+    if (e.classList.contains('x-h2') || e.classList.contains('r-sub') || tg === 'H2' || tg === 'H3') { out.push({ t: 'h2', s: tx(e) }); return; }
+    if (tg === 'LI') { out.push({ t: 'li', runs: runs(e), n: e.parentElement.tagName === 'OL' ? [...e.parentElement.children].indexOf(e) + 1 : 0 }); return; }
+    if (e.querySelector('svg') && !hasBlk(e)) { [...e.children].forEach(walk); return; }
+    if (hasBlk(e) || e.querySelector('svg,table')) { [...e.children].forEach(walk); return; }
+    const t = tx(e); if (t) out.push({ t: 'p', runs: runs(e), s: t });
+  };
+  [...root.children].forEach(walk); return out;
 }
+const reportPages = () => [...document.querySelectorAll('#pgs .x-pg')].map((pg) => ({ pg, head: tx(pg.querySelector('.x-ph b') || pg), blocks: pageBlocks(pg) }));
+const numv = (s) => (/^-?[\d,]+(\.\d+)?$/.test(s) && !/^0\d/.test(s) ? parseFloat(s.replace(/,/g, '')) : s);
+const col = (n) => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+/* ===== 수식 계산 시트 ===== */
+function calcSheet(X, M) {
+  const cs = colsOf(M), ws = {}, set = (a, v, f) => { const c = typeof v === 'number' ? { t: 'n', v } : { t: 's', v: String(v == null ? '' : v) }; if (f) c.f = f; ws[a] = c; };
+  set('A1', '제품 변경 제안 · 계산식 시트 (노란 칸의 값을 바꾸면 아래 결과가 자동 계산됩니다)');
+  const cond = [['시공 면적 (㎡)', M.X.area], ['손실률 (%)', M.X.loss], ['도막 두께 통일 (㎛, 0이면 제품값)', M.X.dft], ['분석 기간 (년)', M.X.H], ['시공비 (원/㎡)', M.X.labor], ['물가상승률 (%/년)', M.X.esc]];
+  cond.forEach((c, k) => { set('A' + (3 + k), c[0]); set('B' + (3 + k), +c[1] || 0); });
+  const R0 = 11; set('A' + R0, '항목'); cs.forEach((i, k) => set(col(k + 1) + R0, rl(i) + ' · ' + pn(i)));
+  const AR = '$B$3', LO = '$B$4', DF = '$B$5', HH = '$B$6', LB = '$B$7', ES = '$B$8';
+  const rows = [
+    ['고형분 SVR (%)', 'in', (c) => c.svr], ['제품 표준 도막 (㎛)', 'in', (c, i) => N(S.ps[i].dft)], ['이론 도포면적 ㎡/L (SVR 없을 때)', 'in', (c, i) => N(S.ps[i].cov)], ['캔 용량 (L)', 'in', (c) => c.pack], ['캔당 단가 (원)', 'in', (c) => c.priceCan], ['보수주기 (년)', 'in', (c) => c.life],
+    ['적용 도막 (㎛)', (x) => `IF(${DF}>0,${DF},IF(${x(2)}>0,${x(2)},100))`, (c) => c.dft],
+    ['이론 면적 (㎡/L)', (x) => `IF(${x(1)}>0,${x(1)}*10/${x(7)},${x(3)})`, (c) => c.theoCov],
+    ['이론 소요량 (L/㎡)', (x) => `IF(${x(8)}>0,1/${x(8)},0)`, (c) => c.theoUse],
+    ['실제 면적 (㎡/L)', (x) => `${x(8)}*(1-MIN(90,MAX(0,${LO}))/100)`, (c) => c.actCov],
+    ['실제 소요량 (L/㎡)', (x) => `IF(${x(10)}>0,1/${x(10)},0)`, (c) => c.actUse],
+    ['단위 단가 (원/L)', (x) => `IF(AND(${x(4)}>0,${x(5)}>0),${x(5)}/${x(4)},0)`, (c) => c.priceL],
+    ['㎡당 자재비 (원)', (x) => `IF(AND(${x(10)}>0,${x(12)}>0),${x(12)}/${x(10)},0)`, (c) => c.costM2],
+    ['캔당 면적 실제 (㎡)', (x) => `IF(${x(4)}>0,${x(10)}*${x(4)},0)`, (c) => c.canArea],
+    ['총 소요량 (L)', (x) => `IF(AND(${AR}>0,${x(10)}>0),${AR}/${x(10)},0)`, (c) => c.vol],
+    ['필요 캔 수', (x) => `IF(${x(4)}>0,ROUNDUP(${x(15)}/${x(4)},0),0)`, (c) => c.cans],
+    ['총 자재비 (원)', (x) => `IF(${x(12)}>0,${x(15)}*${x(12)},0)`, (c) => c.mat],
+    ['도장 횟수', (x) => `IF(${x(6)}>0,ROUNDUP(${HH}/${x(6)},0),1)`, (c) => c.n],
+    ['1회 시공비 (원)', (x) => `(${x(13)}+${LB})*${AR}`, (c) => c.per],
+    ['물가 보정계수', (x) => `IF(${x(6)}>0,IF(${ES}=0,${x(18)},((1+${ES}/100)^(${x(6)}*${x(18)})-1)/((1+${ES}/100)^${x(6)}-1)),1)`, (c) => c.F],
+    ['LCC (원)', (x) => `${x(19)}*${x(20)}`, (c) => c.lcc],
+    ['연평균 비용 (원)', (x) => `IF(${HH}>0,${x(21)}/${HH},0)`, (c) => c.annual]];
+  rows.forEach((r, k) => {
+    const rn = R0 + 1 + k; set('A' + rn, r[0]);
+    cs.forEach((i, j) => { const L = col(j + 1), x = (n) => L + (R0 + n), c = M.C[i], a = L + rn; if (r[1] === 'in') set(a, r[2](c, i) || 0); else set(a, +r[2](c, i) || 0, r[1](x)); });
+  });
+  const last = R0 + rows.length, b = cs.indexOf(0), o = cs.indexOf(S.ours);
+  let rn = last + 2; set('A' + rn, '제안 제품 vs 기존 제품'); rn++;
+  if (b >= 0 && o >= 0) {
+    const B = col(b + 1), O = col(o + 1), ob = M.C[S.ours], bb = M.C[0];
+    const d = [['㎡당 자재비 절감 (원) = 기존 − 제안', `${B}${R0 + 13}-${O}${R0 + 13}`, bb.costM2 - ob.costM2], ['총 자재비 절감 (원)', `${B}${R0 + 17}-${O}${R0 + 17}`, bb.mat - ob.mat], ['LCC 절감 (원)', `${B}${R0 + 21}-${O}${R0 + 21}`, bb.lcc - ob.lcc],
+      ['LCC 절감률 (%)', `IF(${B}${R0 + 21}>0,(${B}${R0 + 21}-${O}${R0 + 21})/${B}${R0 + 21}*100,0)`, bb.lcc > 0 ? (bb.lcc - ob.lcc) / bb.lcc * 100 : 0], ['손익분기 단가 (원/L) — 제안 제품이 이 값 이하면 ㎡당 자재비가 기존보다 낮음', `${B}${R0 + 13}*${O}${R0 + 10}`, bb.costM2 * ob.actCov]];
+    d.forEach((r) => { set('A' + rn, r[0]); set('B' + rn, +r[2] || 0, r[1]); rn++; });
+  }
+  ws['!ref'] = 'A1:' + col(cs.length) + (rn); ws['!cols'] = [{ wch: 44 }].concat(cs.map(() => ({ wch: 20 })));
+  return ws;
+}
+async function doXls() {
+  const M = calcAll(S); if (!ready(M)) return toast('데이터시트를 먼저 첨부하세요'); busy('엑셀 만드는 중…');
+  try {
+    const X = await lib('xlsx'), wb = X.utils.book_new(), used = new Set();
+    const nm = (s, k) => { let n = String(s || '쪽' + (k + 1)).replace(/[\\\/?*\[\]:]/g, ' ').replace(/^\d+\.\s*/, '').trim().slice(0, 24) || '쪽' + (k + 1); n = (k + 1) + '. ' + n; n = n.slice(0, 31); while (used.has(n)) n += '_'; used.add(n); return n; };
+    reportPages().forEach((P, k) => {
+      const A = [], mg = []; let widths = [];
+      P.blocks.forEach((b) => {
+        if (b.t === 'h1') A.push([b.s], []); else if (b.t === 'h2') A.push([], [b.s]); else if (b.t === 'p') A.push([b.s]); else if (b.t === 'li') A.push([(b.n ? b.n + '. ' : '• ') + b.runs.map((r) => r.t).join('').trim()]);
+        else if (b.t === 'tbl') { b.rows.forEach((r) => { const row = []; r.forEach((c) => { row.push(numv(c.t)); for (let q = 1; q < c.cs; q++) row.push(''); }); A.push(row); widths = widths.concat(0); }); A.push([]); }
+        else if (b.t === 'img') A.push(['[그래프] 아래 ‘계산(수식)’ 시트의 값으로 그려진 그래프입니다 — 그래프 그림은 PDF·워드에서 확인하세요']);
+      });
+      const ws = X.utils.aoa_to_sheet(A), mx = A.reduce((m, r) => Math.max(m, r.length), 1);
+      ws['!cols'] = Array.from({ length: mx }, (_, c) => ({ wch: c === 0 ? 46 : 18 })); X.utils.book_append_sheet(wb, ws, nm(P.blocks.find((b) => b.t === 'h1') ? P.blocks.find((b) => b.t === 'h1').s : P.head, k));
+    });
+    X.utils.book_append_sheet(wb, calcSheet(X, M), '계산(수식)');
+    const T = [['제품', '시공 실적']]; S.ps.forEach((p, i) => lst(p.tracks).forEach((t) => T.push([rl(i) + ' ' + pn(i), t]))); X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(T), '실적');
+    const SR = [['제품', '항목', '값', '출처']]; colsOf(M).forEach((i) => { const p = S.ps[i]; [['svr', '고형분 SVR'], ['dft', '표준 도막'], ['cov', '이론 도포면적'], ['pack', '캔 용량'], ['price', '캔당 단가'], ['dry', '건조시간'], ['recoat', '재도장 간격'], ['pot', '가사시간'], ['env', '적용 온도·습도'], ['method', '도장 방법'], ['voc', 'VOC'], ['heat', '내열온도'], ['life', '보수주기'], ['iso', 'ISO 12944'], ['certs', '인증서']].forEach(([k, l]) => { const sv = srcOf(p, k); if (sv) SR.push([rl(i) + ' ' + pn(i), l, p[k], sv]); }); lst(p.perf).forEach((ln) => SR.push([rl(i) + ' ' + pn(i), '성능', ln, perfSrc(p, ln)])); });
+    X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(SR), '값의 출처'); X.writeFile(wb, (S.doc === 'trk' ? '실적자료' : '제품변경_분석보고서') + '.xlsx'); toast('엑셀 파일을 저장했습니다 (보고서 쪽별 시트 + 수식 시트)');
+  } catch (e) { const A = rowsFor(M), q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"', b = new Blob(['﻿' + A.map((r) => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '제품비교.csv'; document.body.appendChild(a); a.click(); a.remove(); toast('엑셀을 만들지 못해 CSV로 저장했습니다'); }
+  busy('');
+}
+/* ===== 워드 (.docx) ===== */
+const xe = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
+const wr = (t, o = {}) => '<w:r><w:rPr><w:rFonts w:ascii="맑은 고딕" w:eastAsia="맑은 고딕" w:hAnsi="맑은 고딕"/>' + (o.b ? '<w:b/>' : '') + (o.c ? '<w:color w:val="' + o.c + '"/>' : '') + '<w:sz w:val="' + (o.sz || 19) + '"/></w:rPr><w:t xml:space="preserve">' + xe(t) + '</w:t></w:r>';
+const wp = (inner, o = {}) => '<w:p><w:pPr>' + (o.keep ? '<w:keepNext/>' : '') + (o.pb ? '<w:pageBreakBefore/>' : '') + (o.bd ? '<w:pBdr><w:bottom w:val="single" w:sz="8" w:space="2" w:color="' + o.bd + '"/></w:pBdr>' : '') + '<w:spacing w:before="' + (o.bf || 0) + '" w:after="' + (o.af == null ? 80 : o.af) + '"/>' + (o.ind ? '<w:ind w:left="' + o.ind + '" w:hanging="260"/>' : '') + (o.jc ? '<w:jc w:val="' + o.jc + '"/>' : '') + '</w:pPr>' + inner + '</w:p>';
+function svgPng(el) {
+  return new Promise((res) => {
+    try {
+      const vb = (el.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number), r = el.getBoundingClientRect(), w0 = vb[2] || r.width || 600, h0 = vb[3] || r.height || 300, W = 1400, H = Math.round(W * h0 / w0);
+      const c = el.cloneNode(true); c.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); c.setAttribute('width', W); c.setAttribute('height', H); if (!vb[2]) c.setAttribute('viewBox', '0 0 ' + w0 + ' ' + h0);
+      const img = new Image(); img.onload = () => { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(img, 0, 0, W, H); cv.toBlob((b) => b ? b.arrayBuffer().then((a) => res({ data: a, w: W, h: H })) : res(null), 'image/png'); };
+      img.onerror = () => res(null); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(c));
+    } catch (e) { res(null); }
+  });
+}
+async function doDocx() {
+  const P = reportPages(); if (!P.length) return toast('보고서가 없습니다'); busy('워드 만드는 중…');
+  try {
+    const Z = await lib('jszip'), z = new Z(), imgs = []; let body = '', first = true, np = 0;
+    for (const pgx of P) {
+      let firstBlk = true; const ttl = esc0(S.meta.title || '제품 변경 제안 분석 보고서');
+      for (const b of pgx.blocks) {
+        const pb = firstBlk && !first; firstBlk = false;
+        if (b.t === 'h1') body += wp(wr(b.s, { b: 1, sz: 30, c: '1F3F8F' }), { pb, bd: '1F3F8F', af: 120, keep: 1 });
+        else if (b.t === 'h2') body += wp(wr(b.s, { b: 1, sz: 22, c: '1F3F8F' }), { pb, bf: 140, af: 60, keep: 1 });
+        else if (b.t === 'p') body += wp(b.runs.map((r) => wr(r.t, { b: r.b })).join(''), { pb });
+        else if (b.t === 'li') body += wp(wr(b.n ? b.n + '. ' : '• ') + b.runs.map((r) => wr(r.t, { b: r.b })).join(''), { pb, ind: 360, af: 40 });
+        else if (b.t === 'tbl') {
+          const nc = Math.max(1, ...b.rows.map((r) => r.reduce((s, c) => s + c.cs, 0))), tw = 10300, cw = Math.floor(tw / nc);
+          body += (pb ? wp('', { pb, af: 0 }) : '') + '<w:tbl><w:tblPr><w:tblW w:w="' + tw + '" w:type="dxa"/><w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map((s) => '<w:' + s + ' w:val="single" w:sz="4" w:space="0" w:color="B8C6E0"/>').join('') + '</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="60" w:type="dxa"/><w:right w:w="60" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>' + Array.from({ length: nc }, () => '<w:gridCol w:w="' + cw + '"/>').join('') + '</w:tblGrid>' +
+            b.rows.map((r) => '<w:tr><w:trPr><w:cantSplit/></w:trPr>' + r.map((c, k) => '<w:tc><w:tcPr><w:tcW w:w="' + cw * c.cs + '" w:type="dxa"/>' + (c.cs > 1 ? '<w:gridSpan w:val="' + c.cs + '"/>' : '') + (c.h ? '<w:shd w:val="clear" w:color="auto" w:fill="E8EEFA"/>' : '') + '</w:tcPr>' + wp(wr(c.t, { b: c.h || k === 0 && nc > 2, sz: 17 }), { af: 20, jc: k && !c.h && /^[-\d,.\s%원㎡㎛L건년]+$/.test(c.t) ? 'right' : '' }) + '</w:tc>').join('') + '</w:tr>').join('') + '</w:tbl>' + wp('', { af: 60 });
+        } else if (b.t === 'img') {
+          const im = await svgPng(b.el); if (!im) continue; imgs.push(im); const id = imgs.length, cx = 5400000, cy = Math.round(cx * im.h / im.w);
+          body += wp('<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:docPr id="' + id + '" name="그림' + id + '"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="' + id + '" name="i' + id + '.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rI' + id + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>', { pb, jc: 'center' });
+        }
+      }
+      first = false; np++;
+    }
+    const hdr = '<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' + wp(wr(S.meta.title || '제품 변경 제안 분석 보고서', { b: 1, sz: 16, c: '5B6B8C' }) + wr('   ' + (S.meta.cust || ''), { sz: 16, c: '5B6B8C' }), { af: 0 }) + '</w:hdr>',
+      ftr = '<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' + wp(wr((S.meta.vend || '') + '   ', { sz: 16, c: '5B6B8C' }) + '<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>', { af: 0, jc: 'right' }) + '</w:ftr>';
+    const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+    z.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>');
+    z.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    z.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rH" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/><Relationship Id="rF" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>' + imgs.map((_, k) => '<Relationship Id="rI' + (k + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/i' + (k + 1) + '.png"/>').join('') + '</Relationships>');
+    imgs.forEach((im, k) => z.file('word/media/i' + (k + 1) + '.png', im.data));
+    z.file('word/header1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + hdr); z.file('word/footer1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + ftr);
+    z.file('word/document.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + NS + '><w:body>' + body + '<w:sectPr><w:headerReference w:type="default" r:id="rH"/><w:footerReference w:type="default" r:id="rF"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1000" w:right="800" w:bottom="900" w:left="800" w:header="450" w:footer="400" w:gutter="0"/></w:sectPr></w:body></w:document>');
+    const blob = await z.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (S.doc === 'trk' ? '실적자료' : '제품변경_분석보고서') + '.docx'; document.body.appendChild(a); a.click(); a.remove(); toast('워드 파일을 저장했습니다');
+  } catch (e) { console.error(e); toast('워드를 만들지 못했습니다 · 네트워크를 확인해 주세요'); }
+  busy('');
+}
+const esc0 = (s) => String(s);
 function doPrint() { document.body.classList.add('pr'); const done = () => { document.body.classList.remove('pr'); window.removeEventListener('afterprint', done); fit(); }; window.addEventListener('afterprint', done); try { window.print(); } catch (e) { done(); toast('인쇄를 열 수 없습니다 · PDF 저장을 사용하세요'); } setTimeout(() => { if (document.body.classList.contains('pr')) done(); }, 4000); }
 async function doPdf() {
   const pages = [...document.querySelectorAll('#pgs .x-pg')]; if (!pages.length) return toast('보고서가 없습니다'); busy('PDF 생성 중…');
@@ -870,7 +1003,7 @@ function init() {
     else if (a === 'trkadd') { const g = (k) => (($('#tk_' + k + i) || {}).value || '').trim(), n = g('n'); if (!n) return toast('현장명을 입력하세요'); const ar = g('a').replace(/[^\d.,]/g, ''), ln = [n, ar ? ar + '㎡' : '', g('y') ? g('y').replace(/[^\d]/g, '') + (/\d{4}/.test(g('y')) ? '' : '') : '', g('c')].filter(Boolean).join(' · '); S.ps[i].tracks = (S.ps[i].tracks ? S.ps[i].tracks.replace(/\s+$/, '') + '\n' : '') + ln; save(); S.keepY = true; render(); toast('실적을 추가했습니다'); }
     else if (a === 'trkclr') { S.ps[i].tracks = ''; save(); S.keepY = true; render(); }
     else if (a === 'doc') { S.doc = b.dataset.v; render(); }
-    else if (a === 'print') doPrint(); else if (a === 'pdf') doPdf(); else if (a === 'xls') doXls();
+    else if (a === 'print') doPrint(); else if (a === 'pdf') doPdf(); else if (a === 'xls') doXls(); else if (a === 'docx') doDocx();
     else if (a === 'apply') { try { const B = window.parent.CMPB, M = calcAll(S), c = M.C[S.ours]; const r = B.apply(+$('#lyr').value, S.ps[S.ours].name, c ? c.priceL : 0); toast(r.ok ? '도장 시스템에 적용했습니다' : r.msg); } catch (x) { toast('적용하지 못했습니다'); } }
   });
   document.addEventListener('input', (e) => {
