@@ -801,9 +801,12 @@ function busy(m) { const b = $('#busy'); if (b) { b.textContent = m || ''; b.cla
 async function attach(i, f, mode) {
   const img = (f.type || '').startsWith('image/'); busy(img ? '이미지 글자 인식 중… (처음엔 시간이 걸립니다)' : '데이터시트 분석 중…');
   try {
+    let D = null; if (mode !== 'trk') { try { const B = window.parent.CMPB; if (B && B.tds) { const sy = (m) => busy(String(m || '').replace(/<[^>]+>/g, ' ')); D = await B.tds(f, sy); if (!D && B.lines) { const t0 = await fileText(f); D = await B.lines(t0.split('\n').map((x) => x.trim()).filter(Boolean), f.name, null, sy); } } } catch (e) { D = null; } busy(img ? '이미지 글자 인식 중…' : '데이터시트 분석 중…'); }
     PARTS = []; const txt = await fileText(f); if (!PARTS.length) PARTS = [{ l: '', t: txt }];
     if (mode === 'trk') { const L = txt.split('\n').map((x) => x.replace(/\s+/g, ' ').trim()).filter((x) => x.length >= 4 && x.length <= 90 && !/^[\d.,\s|-]+$/.test(x)).slice(0, 80); S.ps[i].tracks = [...new Set([...lst(S.ps[i].tracks), ...L])].join('\n'); toast('실적 ' + L.length + '건을 불러왔습니다'); }
-    else { const o = extract(txt, f.name); const keys = Object.keys(o); const p = S.ps[i]; Object.assign(p, o); p.ext = keys; p.src = srcPages(o, keys); p.psrc = {}; lst(o.perf).forEach((ln) => { const q = PARTS.find((x) => nrm(x.t).includes(ln)); if (q && q.l) p.psrc[ln] = q.l; }); p.rawLen = txt.replace(/\s/g, '').length; p.file = { name: f.name, url: img ? URL.createObjectURL(f) : '' }; toast(keys.length ? keys.length + '개 항목을 추출해 자동 비교했습니다' : '자동 추출된 값이 없습니다 · 추출값 확인에서 직접 입력하세요'); }
+    else { const o = extract(txt, f.name); const dbk = [];
+      if (D) { const put = (k, v) => { if (v != null && v !== '' && !(typeof v === 'number' && !(v > 0))) { o[k] = String(typeof v === 'number' ? +v.toFixed(3) : v); dbk.push(k); } };
+        put('name', D.n); put('company', D.mf); put('usage', D.us || D.g); put('desc', D.d); put('svr', D.svr); put('dft', D.dft); put('pack', D.packL); put('dry', D.dry); put('pot', D.pot); } const keys = Object.keys(o); const p = S.ps[i]; Object.assign(p, o); p.ext = keys; p.src = srcPages(o, keys); dbk.forEach((k) => { p.src[k] = '제품 DB 방식 인식'; }); p.psrc = {}; lst(o.perf).forEach((ln) => { const q = PARTS.find((x) => nrm(x.t).includes(ln)); if (q && q.l) p.psrc[ln] = q.l; }); p.rawLen = txt.replace(/\s/g, '').length; p.file = { name: f.name, url: img ? URL.createObjectURL(f) : '' }; toast(keys.length ? keys.length + '개 항목을 ' + (D ? '제품 DB와 같은 방식으로 인식했습니다' : '추출해 자동 비교했습니다') : '자동 추출된 값이 없습니다 · 추출값 확인에서 직접 입력하세요'); }
   } catch (e) { toast(e.message === 'unsupported' ? '지원하지 않는 형식입니다' : '분석하지 못했습니다 · 네트워크를 확인하거나 직접 입력하세요'); }
   busy(''); save(); S.keepY = true; render();
 }

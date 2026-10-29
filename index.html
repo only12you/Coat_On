@@ -3103,7 +3103,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v514',d:'2026.10.29'};
+const APPV={v:'v515',d:'2026.10.29'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -12741,7 +12741,13 @@ window.CMPB=(function(){
   layer,
   apply(i,name,priceL){const c=SY.layers[i];if(!c)return{ok:false,msg:'도장 시스템 코트를 찾지 못했습니다'};const p=PX(name);if(!p)return{ok:false,msg:'제품 DB에서 「'+name+'」을(를) 찾지 못했습니다'};
    c.n=p.n;delete c.svr;const k=pkL(p);if(priceL>0&&k>0)c.price=Math.round(priceL*k);syS();try{syRender()}catch(e){}try{tt('도장 시스템 제품을 변경했습니다<br><small>'+esc(p.n)+'</small>')}catch(e){}return{ok:true}},
-  pdfText:(f,m)=>pdfText(f,m),ocrImg:(f,s)=>ocrImg(f,s),lx:()=>lx()
+  pdfText:(f,m)=>pdfText(f,m),ocrImg:(f,s)=>ocrImg(f,s),lx:()=>lx(),
+  /* v515 제품 DB 와 같은 인식(pdfLines→parseAll→applySpec)으로 파일 1개를 읽어 제품 값으로 돌려줌 */
+  async tds(f,say){const isImg=/^image\//.test(f.type)||/\.(png|jpe?g|webp|bmp)$/i.test(f.name);if(!isImg&&!/pdf/i.test(f.type+f.name))return null;
+   let L=isImg?await ocrImg(f,say):await pdfLines(f,say);return this.lines(L,f.name,!isImg&&!L.ocr?f:null,say)},
+  async lines(L,fname,f,say){const sp=parseAll(L),pt=parsePot(L);let d=parseDry(L);const p={n:'',g:'',d:'',tc:'',ts:0,un:'ℓ',pk:'',mk:'',tr:0,tn:''};applySpec(p,sp,true);if(pt)p.pot=pt;if(d)p.dry=d;
+   if(f&&(!sp.svr||!sp.sg||!sp.d)){try{say&&say('글자 인식(OCR)으로 빠진 항목을 보완하는 중…');const O=await ocrLines(f,say),s2=parseAll(O),t={};for(const k in s2)if(!p[k]&&s2[k]!=null&&s2[k]!=='')t[k]=s2[k];if(+p.mk){delete t.pack;delete t.pk;delete t.mk;delete t.mixa;delete t.mixb}applySpec(p,t,false);if(!p.dry){const d2=parseDry(L.concat(O));if(d2)p.dry=d2}}catch(e){}}
+   p.n=(fname?String(fname).replace(/\.[^.]+$/,'').trim():'')||sp.hname||'';const r=rowOf(p);r.n=p.n||sp.hname||'';r.d=p.d||'';r.sg=+p.sg||0;r.un=UN(p);r.fn=p.n;r.sp=p.sp||'';return r}
  }})();
 </script>
 
