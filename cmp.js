@@ -899,31 +899,96 @@ function calcSheet(X, M, OF) {
   }
   ws.__end = rn; return ws;
 }
+/* ===== 엑셀 (.xlsx) — 직접 작성: A4 · 맑은 고딕 · 그래프 그림 · 수식 ===== */
 async function doXls() {
   const M = calcAll(S); if (!ready(M)) return toast('데이터시트를 먼저 첨부하세요'); busy('엑셀 만드는 중…');
   try {
-    const X = await lib('xlsx'), wb = X.utils.book_new(), used = new Set();
-    const nm = (s, k) => { let n = String(s || '쪽' + (k + 1)).replace(/[\\\/?*\[\]:]/g, ' ').replace(/^\d+\.\s*/, '').trim().slice(0, 24) || '쪽' + (k + 1); n = (k + 1) + '. ' + n; n = n.slice(0, 31); while (used.has(n)) n += '_'; used.add(n); return n; };
-    const A = [];
+    const Z = await lib('jszip'), z = new Z(), WD = [30, 15, 15, 15, 15, 15], TW = WD.reduce((a, b) => a + b, 0), NC = 6;
+    const rows = new Map(), merges = [], imgs = [], breaks = []; let r = 1;
+    const ux = (t) => { let u = 0; for (const ch of String(t)) u += ch.charCodeAt(0) > 255 ? 1.9 : 1.1; return u; };
+    const lines = (t, w) => String(t).split('\n').reduce((n, ln) => n + Math.max(1, Math.ceil(ux(ln) / Math.max(4, w))), 0);
+    const R = (n) => { if (!rows.has(n)) rows.set(n, { h: 0, c: new Map() }); return rows.get(n); };
+    const put = (n, ci, v, s, f) => { R(n).c.set(ci, { v, s, f }); };
+    const span = (n, c1, c2) => { if (c2 > c1) merges.push(col(c1) + n + ':' + col(c2) + n); };
+    const fillBlank = (n, c1, c2, s) => { for (let c = c1; c <= c2; c++) if (!R(n).c.has(c)) put(n, c, '', s); };
+    const width = (c1, c2) => WD.slice(c1, c2 + 1).reduce((a, b) => a + b, 0);
+    const para = (t, s, h0) => { const n = r++; put(n, 0, t, s); span(n, 0, NC - 1); R(n).h = Math.max(h0 || 16, lines(t, TW) * 14 + 4); };
     reportPages().forEach((P, k) => {
-      if (k) A.push([], ['────────────────────────────────────────'], []);
+      if (k) breaks.push(r - 1);
       P.blocks.forEach((b) => {
-        if (b.t === 'h1') A.push([b.s], []); else if (b.t === 'h2') A.push([], [b.s]); else if (b.t === 'p') A.push([b.s]); else if (b.t === 'li') A.push([(b.n ? b.n + '. ' : '• ') + b.runs.map((r) => r.t).join('').trim()]);
-        else if (b.t === 'tbl') { b.rows.forEach((r) => { const row = []; r.forEach((c) => { row.push(numv(c.t)); for (let q = 1; q < c.cs; q++) row.push(''); }); A.push(row); }); A.push([]); }
-        else if (b.t === 'img') A.push(['[그래프] 그래프 그림은 PDF·워드에서 확인하세요 — 값은 위 표와 아래 수식 계산에 있습니다']);
+        if (b.t === 'h1') { const n = r++; put(n, 0, b.s, 1); span(n, 0, NC - 1); fillBlank(n, 0, NC - 1, 1); R(n).h = 28; r++; }
+        else if (b.t === 'h2') { r++; para(b.s, 2, 20); }
+        else if (b.t === 'p') para(b.runs.map((x) => x.t).join('').trim() || b.s, 3);
+        else if (b.t === 'li') para((b.n ? b.n + '. ' : '• ') + b.runs.map((x) => x.t).join('').trim(), 3);
+        else if (b.t === 'tbl') {
+          const nc = Math.max(1, ...b.rows.map((q) => q.reduce((s, c) => s + c.cs, 0)));
+          /* 열 → 시트 열 범위: 첫 열은 A, 나머지는 B..F 를 균등 분할 */
+          const map = []; if (nc === 1) map.push([0, NC - 1]); else { map.push([0, 0]); const rest = NC - 1, m = nc - 1; let c0 = 1; for (let i = 0; i < m; i++) { const sz = Math.floor(rest / m) + (i < rest % m ? 1 : 0); map.push([c0, c0 + Math.max(1, sz) - 1]); c0 += Math.max(1, sz); } }
+          b.rows.forEach((q) => { const n = r++; let ci = 0, hh = 18; q.forEach((c) => { const a = map[Math.min(ci, map.length - 1)][0], e = map[Math.min(ci + c.cs - 1, map.length - 1)][1], st = c.h ? 4 : ci === 0 && nc > 2 ? 7 : 5; put(n, a, c.t, st); span(n, a, e); fillBlank(n, a, e, st); hh = Math.max(hh, lines(c.t, width(a, e)) * 13.5 + 5); ci += c.cs; }); R(n).h = hh; });
+          r++;
+        } else if (b.t === 'img') { /* 아래에서 처리 */ b.at = r; r += 0; }
       });
     });
-    A.push([], ['────────────────────────────────────────'], []);
-    const OF = A.length, cw = calcSheet(X, M, OF);
-    const T = [[], ['[시공 실적]'], ['제품', '시공 실적']]; S.ps.forEach((p, i) => lst(p.tracks).forEach((t) => T.push([rl(i) + ' ' + pn(i), t])));
-    const SR = [[], ['[값의 출처]'], ['제품', '항목', '값', '출처']]; colsOf(M).forEach((i) => { const p = S.ps[i]; [['svr', '고형분 SVR'], ['dft', '표준 도막'], ['cov', '이론 도포면적'], ['pack', '캔 용량'], ['price', '캔당 단가'], ['dry', '건조시간'], ['recoat', '재도장 간격'], ['pot', '가사시간'], ['env', '적용 온도·습도'], ['method', '도장 방법'], ['voc', 'VOC'], ['heat', '내열온도'], ['life', '보수주기'], ['iso', 'ISO 12944'], ['certs', '인증서']].forEach(([k, l]) => { const sv = srcOf(p, k); if (sv) SR.push([rl(i) + ' ' + pn(i), l, p[k], sv]); }); lst(p.perf).forEach((ln) => SR.push([rl(i) + ' ' + pn(i), '성능', ln, perfSrc(p, ln)])); });
-    const ws = X.utils.aoa_to_sheet(A), tail = T.concat(SR);
-    Object.keys(cw).forEach((k) => { if (k !== '__end') ws[k] = cw[k]; });
-    let row = cw.__end + 1; tail.forEach((r) => { r.forEach((v, ci) => { if (v !== '' && v != null) ws[col(ci) + (row + 1)] = typeof v === 'number' ? { t: 'n', v } : { t: 's', v: String(v) }; }); row++; });
-    const mc = Math.max(A.reduce((m, r) => Math.max(m, r.length), 1), 6); ws['!ref'] = 'A1:' + col(mc - 1) + row; ws['!cols'] = Array.from({ length: mc }, (_, i) => ({ wch: i === 0 ? 46 : 20 }));
-    X.utils.book_append_sheet(wb, ws, '보고서');
-    X.writeFile(wb, (S.doc === 'trk' ? '실적자료' : '제품변경_분석보고서') + '.xlsx'); toast('엑셀 파일을 저장했습니다 (보고서 쪽별 시트 + 수식 시트)');
-  } catch (e) { const A = rowsFor(M), q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"', b = new Blob(['﻿' + A.map((r) => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '제품비교.csv'; document.body.appendChild(a); a.click(); a.remove(); toast('엑셀을 만들지 못해 CSV로 저장했습니다'); }
+    /* 그래프 그림: 보고서 쪽 순서대로 다시 훑으며 자리 확보 (위 루프는 행 계산만) */
+    r = 1; rows.clear(); merges.length = 0; breaks.length = 0;
+    const pages = reportPages(); let ik = 0;
+    for (let k = 0; k < pages.length; k++) {
+      const P = pages[k]; if (k) breaks.push(r - 1);
+      for (const b of P.blocks) {
+        if (b.t === 'h1') { const n = r++; put(n, 0, b.s, 1); span(n, 0, NC - 1); fillBlank(n, 0, NC - 1, 1); R(n).h = 28; r++; }
+        else if (b.t === 'h2') { r++; para(b.s, 2, 20); }
+        else if (b.t === 'p') para(b.runs.map((x) => x.t).join('').trim() || b.s, 3);
+        else if (b.t === 'li') para((b.n ? b.n + '. ' : '• ') + b.runs.map((x) => x.t).join('').trim(), 3);
+        else if (b.t === 'tbl') {
+          const nc = Math.max(1, ...b.rows.map((q) => q.reduce((s, c) => s + c.cs, 0))), map = [];
+          if (nc === 1) map.push([0, NC - 1]); else { map.push([0, 0]); const rest = NC - 1, m = nc - 1; let c0 = 1; for (let i = 0; i < m; i++) { const sz = Math.max(1, Math.floor(rest / m) + (i < rest % m ? 1 : 0)); map.push([c0, Math.min(NC - 1, c0 + sz - 1)]); c0 += sz; } }
+          b.rows.forEach((q) => { const n = r++; let ci = 0, hh = 18; q.forEach((c) => { const a = map[Math.min(ci, map.length - 1)][0], e = map[Math.min(ci + c.cs - 1, map.length - 1)][1], st = c.h ? 4 : ci === 0 && nc > 2 ? 7 : 5; put(n, a, c.t, st); span(n, a, e); fillBlank(n, a, e, st); hh = Math.max(hh, lines(c.t, width(a, e)) * 13.5 + 5); ci += c.cs; }); R(n).h = hh; });
+          r++;
+        } else if (b.t === 'img') {
+          const im = await svgPng(b.el); if (!im) continue; let cx = Math.round(TW * 7.2 * 9525 * 0.82), cy = Math.round(cx * im.h / im.w); if (cy > 3200000) { cx = Math.round(cx * 3200000 / cy); cy = 3200000; } const pt = cy / 12700, nr = Math.ceil(pt / 15) + 1;
+          imgs.push({ im, row: r - 1, cx, cy }); for (let q = 0; q < nr; q++) R(r + q).h = 15; r += nr;
+        }
+      }
+    }
+    r += 2; { const n = r++; put(n, 0, '수식 계산 (노란 칸의 값을 바꾸면 결과가 자동으로 다시 계산됩니다)', 1); span(n, 0, NC - 1); fillBlank(n, 0, NC - 1, 1); R(n).h = 26; } breaks.push(r - 2);
+    const OF = r, cw = calcSheet(null, M, OF), cs = colsOf(M), R0 = 11 + OF;
+    Object.keys(cw).forEach((a) => { if (a === '__end') return; const m = a.match(/^([A-Z]+)(\d+)$/), ci = m[1].charCodeAt(0) - 65, n = +m[2], c = cw[a]; if (n === OF + 1) return;
+      let st; if (ci === 0) st = 7; else if (n < R0 - 1) st = 8; else if (n === R0) st = 4; else { const lab = (cw['A' + n] || {}).v || ''; const isIn = !c.f && n > R0; st = isIn ? 8 : (/원|캔 수|횟수|\(%\)/.test(lab) ? 9 : 10); }
+      if (n === R0 && ci > 0) st = 4; put(n, ci, c.v, st, c.f); if (c.t === 's' && ci === 0 && n > R0 - 2) R(n).h = Math.max(R(n).h || 0, 16); });
+    for (let n = OF + 2; n <= cw.__end; n++) if (rows.has(n)) { R(n).h = Math.max(R(n).h || 0, 16); if (R(n).c.get(0) && ux(R(n).c.get(0).v) > WD[0] * 0.95) R(n).h = Math.max(R(n).h, lines(R(n).c.get(0).v, WD[0]) * 14 + 4); }
+    r = cw.__end + 2;
+    const tb = (title, head, data) => { r++; { const n = r++; put(n, 0, title, 2); span(n, 0, NC - 1); R(n).h = 20; } const n = r++; head.forEach((h, i) => put(n, i, h, 4)); R(n).h = 18; data.forEach((d) => { const m = r++; let hh = 18; d.forEach((v, i) => { put(m, i, v, i === 0 ? 7 : 5); hh = Math.max(hh, lines(v, WD[i] || 15) * 13.5 + 5); }); R(m).h = hh; }); };
+    const T = []; S.ps.forEach((p, i) => lst(p.tracks).forEach((t) => T.push([rl(i) + ' ' + pn(i), t]))); if (T.length) tb('시공 실적', ['제품', '시공 실적'], T.map((d) => [d[0], d[1]]));
+    const SR = []; cs.forEach((i) => { const p = S.ps[i]; [['svr', '고형분 SVR'], ['dft', '표준 도막'], ['cov', '이론 도포면적'], ['pack', '캔 용량'], ['price', '캔당 단가'], ['dry', '건조시간'], ['recoat', '재도장 간격'], ['pot', '가사시간'], ['env', '적용 온도·습도'], ['method', '도장 방법'], ['voc', 'VOC'], ['heat', '내열온도'], ['life', '보수주기'], ['iso', 'ISO 12944'], ['certs', '인증서']].forEach(([k, l]) => { const sv = srcOf(p, k); if (sv) SR.push([rl(i) + ' ' + pn(i), l, String(p[k]), sv]); }); lst(p.perf).forEach((ln) => SR.push([rl(i) + ' ' + pn(i), '성능', ln, perfSrc(p, ln)])); });
+    if (SR.length) tb('값의 출처', ['제품', '항목', '값', '출처'], SR);
+    /* ---- XML ---- */
+    const sm = (a) => a.map((m) => '<mergeCell ref="' + m + '"/>').join('');
+    const cell = (n, ci, o) => { const a = col(ci) + n, s = o.s == null ? 0 : o.s; if (o.f) return '<c r="' + a + '" s="' + s + '"><f>' + xe(o.f) + '</f><v>' + (+o.v || 0) + '</v></c>'; if (typeof o.v === 'number') return '<c r="' + a + '" s="' + s + '"><v>' + o.v + '</v></c>'; if (o.v === '' || o.v == null) return '<c r="' + a + '" s="' + s + '"/>'; return '<c r="' + a + '" s="' + s + '" t="inlineStr"><is><t xml:space="preserve">' + xe(o.v) + '</t></is></c>'; };
+    const lastRow = Math.max(...rows.keys());
+    const sd = [...rows.keys()].sort((a, b) => a - b).map((n) => { const o = rows.get(n); return '<row r="' + n + '"' + (o.h ? ' ht="' + o.h.toFixed(1) + '" customHeight="1"' : '') + '>' + [...o.c.keys()].sort((a, b) => a - b).map((ci) => cell(n, ci, o.c.get(ci))).join('') + '</row>'; }).join('');
+    const fnt = (sz, b, c) => '<font>' + (b ? '<b/>' : '') + '<sz val="' + sz + '"/><color rgb="FF' + (c || '1E293B') + '"/><name val="맑은 고딕"/><family val="2"/><charset val="129"/></font>';
+    const bd = '<border><left style="thin"><color rgb="FFB8C6E0"/></left><right style="thin"><color rgb="FFB8C6E0"/></right><top style="thin"><color rgb="FFB8C6E0"/></top><bottom style="thin"><color rgb="FFB8C6E0"/></bottom><diagonal/></border>';
+    const fl = (c) => '<fill><patternFill patternType="solid"><fgColor rgb="FF' + c + '"/><bgColor indexed="64"/></patternFill></fill>';
+    const xf = (f, fi, b, nf, al) => '<xf numFmtId="' + nf + '" fontId="' + f + '" fillId="' + fi + '" borderId="' + b + '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1" applyNumberFormat="1"><alignment ' + al + '/></xf>';
+    const AL = 'vertical="center" wrapText="1"', ALT = 'vertical="top" wrapText="1"', ALR = 'horizontal="right" vertical="center"';
+    const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0.00"/><numFmt numFmtId="165" formatCode="#,##0"/></numFmts><fonts count="6">' + fnt(10) + fnt(16, 1, '1F3F8F') + fnt(12, 1, '1F3F8F') + fnt(10, 1) + fnt(9, 0, '64748B') + fnt(10, 1, '1F3F8F') + '</fonts><fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' + fl('E8EEFA') + fl('F5F8FE') + fl('FFF9C4') + '</fills><borders count="3"><border><left/><right/><top/><bottom/><diagonal/></border>' + bd + '<border><left/><right/><top/><bottom style="medium"><color rgb="FF1F3F8F"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="11">' +
+      xf(0, 0, 0, 0, AL) + xf(1, 0, 2, 0, AL) + xf(2, 0, 0, 0, AL) + xf(0, 0, 0, 0, ALT) + xf(3, 2, 1, 0, 'horizontal="center" vertical="center" wrapText="1"') + xf(0, 0, 1, 0, AL) + xf(0, 0, 1, 164, ALR) + xf(3, 3, 1, 0, AL) + xf(0, 4, 1, 164, ALR) + xf(0, 0, 1, 165, ALR) + xf(0, 0, 1, 164, ALR) + '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+    const imgXml = imgs.map((o, k) => '<xdr:oneCellAnchor><xdr:from><xdr:col>0</xdr:col><xdr:colOff>60000</xdr:colOff><xdr:row>' + o.row + '</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:ext cx="' + o.cx + '" cy="' + o.cy + '"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="' + (k + 2) + '" name="그래프' + (k + 1) + '"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId' + (k + 1) + '"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + o.cx + '" cy="' + o.cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>').join('');
+    const NSM = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+    z.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + (imgs.length ? '<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : '') + '</Types>');
+    z.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+    z.file('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook ' + NSM + '><sheets><sheet name="보고서" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm.Print_Area" localSheetId="0">보고서!$A$1:$F$' + lastRow + '</definedName></definedNames><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>');
+    z.file('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+    z.file('xl/styles.xml', styles);
+    z.file('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet ' + NSM + '><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:F' + lastRow + '"/><sheetViews><sheetView showGridLines="0" workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="16"/><cols>' + WD.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols><sheetData>' + sd + '</sheetData>' + (merges.length ? '<mergeCells count="' + merges.length + '">' + sm(merges) + '</mergeCells>' : '') + '<printOptions horizontalCentered="1"/><pageMargins left="0.4" right="0.4" top="0.5" bottom="0.55" header="0.25" footer="0.25"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/><headerFooter><oddHeader>&amp;L&amp;"맑은 고딕,Bold"&amp;9' + xe(S.meta.title || '제품 변경 제안 분석 보고서') + '&amp;R&amp;"맑은 고딕,Regular"&amp;9' + xe(S.meta.cust || '') + '</oddHeader><oddFooter>&amp;L&amp;"맑은 고딕,Regular"&amp;9' + xe(S.meta.vend || '') + '&amp;R&amp;"맑은 고딕,Regular"&amp;9&amp;P / &amp;N</oddFooter></headerFooter>' + (breaks.length ? '<rowBreaks count="' + breaks.length + '" manualBreakCount="' + breaks.length + '">' + breaks.map((b) => '<brk id="' + b + '" max="16383" man="1"/>').join('') + '</rowBreaks>' : '') + (imgs.length ? '<drawing r:id="rId1"/>' : '') + '</worksheet>');
+    if (imgs.length) {
+      z.file('xl/worksheets/_rels/sheet1.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/></Relationships>');
+      z.file('xl/drawings/drawing1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' + imgXml + '</xdr:wsDr>');
+      z.file('xl/drawings/_rels/drawing1.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + imgs.map((_, k) => '<Relationship Id="rId' + (k + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image' + (k + 1) + '.png"/>').join('') + '</Relationships>');
+      imgs.forEach((o, k) => z.file('xl/media/image' + (k + 1) + '.png', o.im.data));
+    }
+    const blob = await z.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (S.doc === 'trk' ? '실적자료' : '제품변경_분석보고서') + '.xlsx'; document.body.appendChild(a); a.click(); a.remove(); toast('엑셀 파일을 저장했습니다 (A4 · 그래프 · 수식 포함)');
+  } catch (e) { console.error(e); const A = rowsFor(M), q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"', b = new Blob(['﻿' + A.map((x) => x.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '제품비교.csv'; document.body.appendChild(a); a.click(); a.remove(); toast('엑셀을 만들지 못해 CSV로 저장했습니다'); }
   busy('');
 }
 /* ===== 워드 (.docx) ===== */
