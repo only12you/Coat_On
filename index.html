@@ -2937,17 +2937,20 @@ function rdHTML(){
 <div class="rdh tdt">견적 세부 내역 <small>캔 구매 기준</small></div><div class="rdt tdt"><div class="rdr dt h"><span>품명</span><span>규격</span><span>수량</span><span>단가</span><span>금액</span></div>${dt}</div>
 <div class="rdsum"><div><span>공급가액</span><b>${F(sum,0)}</b></div><div><span>VAT (10%)</span><b>${F(vat,0)}</b></div><div class="tt"><span>합계 (VAT 포함)</span><b>${F(sum+vat,0)}원</b></div></div></div>`}
 
-function esSyn(c){const p=PX(c.n)||{},pk=+p.mk||+p.pk||18;return [{nm:c.n||'제품명 입력',use:'',th:0,ac:0,a1:null,u:(+c.price||0)/pk,amt:0,pk,nc:1}]}
-function esGroups(){const E=esS(),G=[];
- if(E.pq!==0){const cs=S.coats.map((c,i)=>({c,i,r:calc(c)||(c&&String(c.n||'').trim()?esSyn(c):null)})).filter(x=>x.r&&!(E.hid&&E.hid['c'+x.i])),lab=syLabsOld(cs.length);G.push({k:'c',kt:'t',tag:'PQC',lab:S.lab||{},A:+S.area||1,L:cs.map((x,j)=>({...x,lab:lab[j]||'',ord:od(x.i+1)}))})}
+const esSf=(fn,fb)=>{try{return fn()}catch(x){window.ESERR=(x&&x.message)||String(x);return fb}};
+function esSyn(c){const p=esSf(()=>PX(c.n),null)||{},pk=+p.mk||+p.pk||18;return [{nm:c.n||'제품명 입력',use:'',th:0,ac:0,a1:null,u:(+c.price||0)/pk,amt:0,pk,nc:1}]}
+function esGroups(){return esSf(esGroups0,[])}
+function esGroups0(){const E=esS(),G=[];
+ if(E.pq!==0){const cs=S.coats.map((c,i)=>({c,i,r:esSf(()=>calc(c),null)||(c&&String(c.n||'').trim()?esSyn(c):null)})).filter(x=>x.r&&!(E.hid&&E.hid['c'+x.i])),lab=syLabsOld(cs.length);G.push({k:'c',kt:'t',tag:'PQC',lab:S.lab||{},A:+S.area||1,L:cs.map((x,j)=>({...x,lab:lab[j]||'',ord:od(x.i+1)}))})}
  if(E.sy){const lb=syLb(),gs=syGr(),sel=(Array.isArray(E.syg)&&E.syg.length?E.syg:gs.map((g,k)=>k)).filter(k=>gs[k]);
-  sel.forEach(k=>{const gr=gs[k],L=gr.idx.map(i=>{const c=SY.layers[i],r=calc(c);return r?{c,i,r}:{c:String(c.n||'').trim()?c:Object.assign({},c,{n:'제품명 입력'}),i,r:esSyn(c)}}).filter(x=>x.r&&!(E.hid&&E.hid['s'+x.i]));
+  sel.forEach(k=>{const gr=gs[k],L=gr.idx.map(i=>{const c=SY.layers[i];if(!c)return null;const r=esSf(()=>calc(c),null);return r?{c,i,r}:{c:String(c.n||'').trim()?c:Object.assign({},c,{n:'제품명 입력'}),i,r:esSyn(c)}}).filter(x=>x&&x.r&&!(E.hid&&E.hid['s'+x.i]));
    if(L.length)G.push({k:'s',kt:'y',tag:'SYS',lab:SY.groups[k]||{},sn:gr.name,A:+((SY.groups[k]||{}).area)||+SY.area||1,L:L.map(x=>({...x,lab:lb[x.i]||'',ord:lb[x.i]||od(x.i+1)}))})})}
  return G}
-function esRows(){const R=[];esGroups().forEach((g,gi)=>{g.L.forEach(x=>{const p=P(x.c.n),Ac=+x.c.area||g.A,a=x.r[0],t=x.r[1],u=UN(p);
+function esRows(){return esSf(esRows0,[])}
+function esRows0(){const R=[];esGroups().forEach((g,gi)=>{g.L.forEach(x=>{try{const p=P(x.c.n),Ac=+x.c.area||g.A,a=x.r[0],t=x.r[1],u=UN(p);
  R.push({k:g.k+x.i,g:g.k+x.i,sn:g.sn||'',n:(g.k=='s'?x.ord:od(x.i+1))+' · '+x.c.n,s:'1말 ('+F(a.pk)+u+')',q:a.nc?'':(Ac>0?Math.ceil(a.ac*Ac/a.pk-1e-9):0),p:+x.c.price||0,m:a.nc?'':'면적 '+F(Ac)+'㎡',nc:a.nc?1:0});
  if(t)R.push({k:g.kt+x.i,g:g.k+x.i,n:'└ '+String(p.tn||'희석제').replace(/\s*\n\s*/g,' '),s:'1캔 ('+F(t.pk)+'L)',q:Ac>0?Math.ceil(t.ac*Ac/t.pk-1e-9):0,p:+x.c.tprice||0,m:''});
-});
+}catch(er){window.ESERR=(er&&er.message)||String(er);R.push({k:g.k+x.i,g:g.k+x.i,sn:g.sn||'',n:(g.k=='s'?x.ord:od(x.i+1))+' · '+(x.c&&x.c.n||'제품명 입력'),s:'수량·단가 직접 입력',q:'',p:+(x.c&&x.c.price)||0,m:'',nc:1})}});
  const LB=lbCalc(g.lab,g.A);if(LB){const d2=v=>+v.toFixed(2),gk='L'+g.k+gi,ps=(g.lab||{}).ps,px=w=>LB.B?'':' · 투입량 '+(+w.toFixed(4))+'인/㎡'+(ps?' · '+ps.s+(ps.v?'':'(검증 전)'):'');
   if(LB.qp>0)R.push({k:'lp'+gk,g:gk,sn:'',n:'노무비 · 도장공',s:'인',q:d2(LB.qp),p:LB.s.rp,m:(g.sn||'전체')+(LB.m>1?' · 할증 '+LB.s.sc+'%':'')+px(LB.pp),dec:1});
   if(LB.qn>0)R.push({k:'ln'+gk,g:gk,sn:'',n:'노무비 · 보통인부',s:'인',q:d2(LB.qn),p:LB.s.rn,m:(g.sn||'전체')+px(LB.pn),dec:1});
@@ -2958,7 +2961,8 @@ function esIssue(){const E=esS(),m=/^(?:PQC|CC)-(\d{4})-(\d{4})$/.exec(String(E.
 function esDef(){const E=esS();if(!E.v[0])E.v[0]=esToday();if(!E.no)esAutoNo();sv()}
 function esGo(k){const E=esS();if(k=='sy')E.syg=null;E.hid=E.hid||{};Object.keys(E.hid).forEach(x=>{if(x[0]==(k=='sy'?'s':'c'))delete E.hid[x]});if(k=='sy')E.sy=1;else E.pq=1;sv();const e=$('#es');if(e)e.remove();window.ESRP=0;T(k=='sy'?3:0)}
 function esHide(g){const E=esS();E.hid=E.hid||{};E.hid[g]=1;sv();tt('견적에서 뺐습니다<br><small>도장S / 일위대가표 버튼으로 다시 가져올 수 있습니다</small>');esFre()}
-function esHTML(){
+function esHTML(){return esSf(esHTML0,'<div class="esh epd"><div class="eph"><div class="epk">견 적 서</div></div><div class="epn"><b>안내</b><div>견적서를 표시하지 못했습니다. 도장 시스템/일위대가표의 제품 입력을 확인해 주세요.</div></div></div>')}
+function esHTML0(){
  const E=esS(),R=esRows(),V=E.v,SP=E.sp||{},fm=v=>/^\d+(\.\d+)?$/.test(String(v))?(String(v).includes('.')?F(+v,2):F(+v,0)):v;
  const row=(l,v)=>`<div class="epr"><span>${l}</span><b>${esc(v)||'-'}</b></div>`;
  const info=`<div class="epi2"><div class="epc"><div class="epct">공급<br>받는자</div><div class="epb">${row('수신',V[1])}${row('현장/공사명',V[3])}${row('견적일자',V[0])}${row('견적번호',qtLabel(E))}${row('유효기간',V[4])}${row('결제조건',V[5])}</div></div><div class="epc"><div class="epct">공급자</div><div class="epb">${row('상호',SP.n)}${row('대표자',SP.r)}${row('담당자',SP.m)}${row('연락처',SP.c)}${row('주소',SP.a)}</div></div></div>`;
@@ -2982,7 +2986,7 @@ function esX(j,f,v){const E=esS();if(E.x[j])E.x[j][f]=v;sv();esSum()}
 function esAdd(){esS().x.push({n:'',s:'',q:'1',p:''});sv();esRe()}
 function esDel(j){esS().x.splice(j,1);sv();esRe()}
 function esSum(){const R=$('#es');if(!R)return;const g=e=>parseFloat(String(e.value).replace(/,/g,''))||0;let s=0;R.querySelectorAll('.ei[data-k]').forEach(tr=>{const i=tr.querySelectorAll('input.r'),a=Math.round(g(i[0])*g(i[1]));s+=a;tr.querySelector('.am').textContent=F(a,0)});const v=Math.round(s*.1);$('#esS').textContent=F(s,0);$('#esV').textContent=F(v,0);$('#esT').textContent=F(s+v,0)}
-function esRe(){const w=$('#es .rpw');if(!w)return;w.innerHTML=esHTML();w.firstChild.style.zoom=Math.min(1,(innerWidth-16)/794);esSum();esFsum()}
+function esRe(){const w=$('#es .rpw');if(!w)return;w.innerHTML=esHTML();if(w.firstChild&&w.firstChild.style)w.firstChild.style.zoom=Math.min(1,(innerWidth-16)/794);esSf(esSum,0);esSf(esFsum,0)}
 function rcFit(){document.querySelectorAll('#rs .rcs b').forEach(b=>{const n=b.textContent.length;b.style.fontSize=n>20?'10px':n>16?'11px':n>13?'12px':n>10?'13.5px':''})}
 function ccTg(i,el,ev){return;if(ev&&ev.target.closest&&ev.target.closest('label,input'))return;const cd=el.closest('.ccard');if(!cd)return;const m=cd.classList.toggle('cmin');if(S.coats[i])S.coats[i].cm=m?1:0;sv()}
 function esReset(){ask('견적서에 입력한 내용을 모두 지울까요?<br><small>수량·단가 수정, 추가 항목, 공급자·수신 입력칸이 초기화됩니다</small>',()=>{S.es={};window.ESED=undefined;esDef();sv();esFre();esRe();tt('견적서를 초기화했습니다')})}
@@ -2992,7 +2996,7 @@ e.innerHTML=`<div class="zh" ${hb?`style="--hb:url('${hb}')"`:''}><button class=
 document.body.append(e);esFre()}
 function esNav(){const g=document.getElementById('gnav');if(!g)return '';return g.outerHTML.replace(/id="?gnav"?/,'id="esnav"').replace(/onclick="/g,'onclick="$(\'#es\').remove();').replace(/ on(?=[" ])/g,'')}
 function esEd(v){window.ESED=!!v;esFre()}
-function esFre(){const f=$('#es .zf');if(!f)return;f.innerHTML=esForm();esRe()}
+function esFre(){const f=$('#es .zf');if(!f)return;window.ESERR='';f.innerHTML=esForm();esRe();if(window.ESERR&&!f.querySelector('.zesr')){const d=document.createElement('div');d.className='zesr';d.style.cssText='margin:8px 12px;padding:8px 10px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:10px;font-size:12px;line-height:1.45';d.innerHTML='일부 항목은 계산하지 못해 <b>수량·단가 직접 입력</b>으로 표시했습니다.<br><small>'+esc(window.ESERR)+'</small>';f.prepend(d)}}
 function esQ(i,v){esH('v',i,v);esRe()}
 function esNo(v){esS().no=v;sv();if($('#es'))esRe()}
 function esSp(k,v){const E=esS();E.sp=E.sp||{};E.sp[k]=v;sv();esRe()}
@@ -3005,7 +3009,8 @@ function esPv(){const w=$('#es .rpw');if(!w)return;esRe();w.hidden=false;w.class
 function esPvX(){const w=$('#es .rpw');if(w){w.hidden=true;w.classList.remove('pv')}const E0=$('#es');if(E0)E0.classList.remove('pvm');['.qpvc','.qpvt','.qpvb'].forEach(q=>{const b=$('#es '+q);if(b)b.remove()});if(window.ESRP){window.ESRP=0;const e=$('#es');if(e)e.remove();return}esFre()}
 function esFsum(){const R=$('#es');if(!R||!R.querySelector('.zf'))return;R.querySelectorAll('.zit[data-k]').forEach(q=>{const d=R.querySelector('.rpw .ei[data-k="'+q.dataset.k+'"] .am'),o=q.querySelector('.zam');if(d&&o)o.textContent=d.textContent});[['fS','esS'],['fV','esV'],['fT','esT']].forEach(([a,b])=>{const x=R.querySelector('#'+a),y=R.querySelector('.rpw #'+b);if(x&&y)x.textContent=y.textContent})}
 function esOR(k){const E=esS();delete E.o[k];sv();tt('수정한 수량·단가를 초기화했습니다');esFre()}
-function esForm(){const E=esS(),R=esRows(),V=E.v,SP=E.sp=E.sp||{};
+function esForm(){return esSf(esForm0,'<div class="zc"><div class="zem" style="color:#b45309">견적서 입력 화면을 만들지 못했습니다.<br>하단 ‘초기화’ 후 다시 도장S / 일위대가표를 불러와 주세요.'+(window.ESERR?'<br><small>('+esc(window.ESERR)+')</small>':'')+'</div><div class="zsrc" style="margin-top:10px"><button class="zs1" onclick="esAdd();esFre()">품목+</button><button class="zs2" onclick="esGo(\'sy\')">도장S</button><button class="zs3" onclick="esGo(\'pq\')">일위대가표</button></div></div>')}
+function esForm0(){const E=esS(),R=esRows(),V=E.v,SP=E.sp=E.sp||{};
 const spv=SP.n||SP.r||SP.m||SP.c||SP.a,ed=window.ESED===undefined?!spv:window.ESED,spRows=[['공급업체명','n'],['대표자명','r'],['담당자','m'],['연락처','c'],['주소','a']];
 const fld=(l,v,fn,ph,ic,tp)=>`<label class="zfl"><span>${esc(l)}</span><div>${ic?`<i>${ic}</i>`:''}<input ${tp?'type="'+tp+'" ':''}value="${esc(v||'')}" placeholder="${ph||''}" oninput="${fn}"></div></label>`;
 const hd=(ic,ti,en,extra)=>`<div class="zch"><i>${ic}</i><div><b>${ti}</b>${en?`<small>${en}</small>`:''}</div>${extra||''}</div>`;
@@ -3104,7 +3109,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v518',d:'2026.10.29'};
+const APPV={v:'v519',d:'2026.10.29'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -4618,7 +4623,7 @@ function repText(el){
   else if(/\btrw\b/.test(k))L.push(t(n.children[0])+': '+t(n.children[1])+'원');
   else if(/\bepn\b/.test(k))L.push('','비고: '+t(n.querySelector('div')||n))});
  return ['견적서',...L].join('\n')}
-function esText(){const el=document.querySelector('#es .esh');return el?repText(el):''}
+function esText(){let el=document.querySelector('#es .esh');if(!el){try{esRe()}catch(x){}el=document.querySelector('#es .esh')}return el?esSf(()=>repText(el),''):''}
 async function shFile(bl,name,title){
  const f=new File([bl],name,{type:bl.type});
  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title});return true}dl(bl,name);tt('파일을 저장했습니다<br><small>'+esc(name)+'</small>');return true}
