@@ -859,13 +859,14 @@ const reportPages = () => [...document.querySelectorAll('#pgs .x-pg')].map((pg) 
 const numv = (s) => (/^-?[\d,]+(\.\d+)?$/.test(s) && !/^0\d/.test(s) ? parseFloat(s.replace(/,/g, '')) : s);
 const col = (n) => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
 /* ===== 수식 계산 시트 ===== */
-function calcSheet(X, M) {
+function calcSheet(X, M, OF) {
+  OF = OF || 0;
   const cs = colsOf(M), ws = {}, set = (a, v, f) => { const c = typeof v === 'number' ? { t: 'n', v } : { t: 's', v: String(v == null ? '' : v) }; if (f) c.f = f; ws[a] = c; };
-  set('A1', '제품 변경 제안 · 계산식 시트 (노란 칸의 값을 바꾸면 아래 결과가 자동 계산됩니다)');
+  set('A' + (1 + OF), '[수식 계산] 아래 조건의 값을 바꾸면 소요량 · 자재비 · LCC · 절감액 · 손익분기 단가가 자동으로 다시 계산됩니다');
   const cond = [['시공 면적 (㎡)', M.X.area], ['손실률 (%)', M.X.loss], ['도막 두께 통일 (㎛, 0이면 제품값)', M.X.dft], ['분석 기간 (년)', M.X.H], ['시공비 (원/㎡)', M.X.labor], ['물가상승률 (%/년)', M.X.esc]];
-  cond.forEach((c, k) => { set('A' + (3 + k), c[0]); set('B' + (3 + k), +c[1] || 0); });
-  const R0 = 11; set('A' + R0, '항목'); cs.forEach((i, k) => set(col(k + 1) + R0, rl(i) + ' · ' + pn(i)));
-  const AR = '$B$3', LO = '$B$4', DF = '$B$5', HH = '$B$6', LB = '$B$7', ES = '$B$8';
+  cond.forEach((c, k) => { set('A' + (3 + OF + k), c[0]); set('B' + (3 + OF + k), +c[1] || 0); });
+  const R0 = 11 + OF; set('A' + R0, '항목'); cs.forEach((i, k) => set(col(k + 1) + R0, rl(i) + ' · ' + pn(i)));
+  const AR = '$B$' + (3 + OF), LO = '$B$' + (4 + OF), DF = '$B$' + (5 + OF), HH = '$B$' + (6 + OF), LB = '$B$' + (7 + OF), ES = '$B$' + (8 + OF);
   const rows = [
     ['고형분 SVR (%)', 'in', (c) => c.svr], ['제품 표준 도막 (㎛)', 'in', (c, i) => N(S.ps[i].dft)], ['이론 도포면적 ㎡/L (SVR 없을 때)', 'in', (c, i) => N(S.ps[i].cov)], ['캔 용량 (L)', 'in', (c) => c.pack], ['캔당 단가 (원)', 'in', (c) => c.priceCan], ['보수주기 (년)', 'in', (c) => c.life],
     ['적용 도막 (㎛)', (x) => `IF(${DF}>0,${DF},IF(${x(2)}>0,${x(2)},100))`, (c) => c.dft],
@@ -896,28 +897,32 @@ function calcSheet(X, M) {
       ['LCC 절감률 (%)', `IF(${B}${R0 + 21}>0,(${B}${R0 + 21}-${O}${R0 + 21})/${B}${R0 + 21}*100,0)`, bb.lcc > 0 ? (bb.lcc - ob.lcc) / bb.lcc * 100 : 0], ['손익분기 단가 (원/L) — 제안 제품이 이 값 이하면 ㎡당 자재비가 기존보다 낮음', `${B}${R0 + 13}*${O}${R0 + 10}`, bb.costM2 * ob.actCov]];
     d.forEach((r) => { set('A' + rn, r[0]); set('B' + rn, +r[2] || 0, r[1]); rn++; });
   }
-  ws['!ref'] = 'A1:' + col(cs.length) + (rn); ws['!cols'] = [{ wch: 44 }].concat(cs.map(() => ({ wch: 20 })));
-  return ws;
+  ws.__end = rn; return ws;
 }
 async function doXls() {
   const M = calcAll(S); if (!ready(M)) return toast('데이터시트를 먼저 첨부하세요'); busy('엑셀 만드는 중…');
   try {
     const X = await lib('xlsx'), wb = X.utils.book_new(), used = new Set();
     const nm = (s, k) => { let n = String(s || '쪽' + (k + 1)).replace(/[\\\/?*\[\]:]/g, ' ').replace(/^\d+\.\s*/, '').trim().slice(0, 24) || '쪽' + (k + 1); n = (k + 1) + '. ' + n; n = n.slice(0, 31); while (used.has(n)) n += '_'; used.add(n); return n; };
+    const A = [];
     reportPages().forEach((P, k) => {
-      const A = [], mg = []; let widths = [];
+      if (k) A.push([], ['────────────────────────────────────────'], []);
       P.blocks.forEach((b) => {
         if (b.t === 'h1') A.push([b.s], []); else if (b.t === 'h2') A.push([], [b.s]); else if (b.t === 'p') A.push([b.s]); else if (b.t === 'li') A.push([(b.n ? b.n + '. ' : '• ') + b.runs.map((r) => r.t).join('').trim()]);
-        else if (b.t === 'tbl') { b.rows.forEach((r) => { const row = []; r.forEach((c) => { row.push(numv(c.t)); for (let q = 1; q < c.cs; q++) row.push(''); }); A.push(row); widths = widths.concat(0); }); A.push([]); }
-        else if (b.t === 'img') A.push(['[그래프] 아래 ‘계산(수식)’ 시트의 값으로 그려진 그래프입니다 — 그래프 그림은 PDF·워드에서 확인하세요']);
+        else if (b.t === 'tbl') { b.rows.forEach((r) => { const row = []; r.forEach((c) => { row.push(numv(c.t)); for (let q = 1; q < c.cs; q++) row.push(''); }); A.push(row); }); A.push([]); }
+        else if (b.t === 'img') A.push(['[그래프] 그래프 그림은 PDF·워드에서 확인하세요 — 값은 위 표와 아래 수식 계산에 있습니다']);
       });
-      const ws = X.utils.aoa_to_sheet(A), mx = A.reduce((m, r) => Math.max(m, r.length), 1);
-      ws['!cols'] = Array.from({ length: mx }, (_, c) => ({ wch: c === 0 ? 46 : 18 })); X.utils.book_append_sheet(wb, ws, nm(P.blocks.find((b) => b.t === 'h1') ? P.blocks.find((b) => b.t === 'h1').s : P.head, k));
     });
-    X.utils.book_append_sheet(wb, calcSheet(X, M), '계산(수식)');
-    const T = [['제품', '시공 실적']]; S.ps.forEach((p, i) => lst(p.tracks).forEach((t) => T.push([rl(i) + ' ' + pn(i), t]))); X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(T), '실적');
-    const SR = [['제품', '항목', '값', '출처']]; colsOf(M).forEach((i) => { const p = S.ps[i]; [['svr', '고형분 SVR'], ['dft', '표준 도막'], ['cov', '이론 도포면적'], ['pack', '캔 용량'], ['price', '캔당 단가'], ['dry', '건조시간'], ['recoat', '재도장 간격'], ['pot', '가사시간'], ['env', '적용 온도·습도'], ['method', '도장 방법'], ['voc', 'VOC'], ['heat', '내열온도'], ['life', '보수주기'], ['iso', 'ISO 12944'], ['certs', '인증서']].forEach(([k, l]) => { const sv = srcOf(p, k); if (sv) SR.push([rl(i) + ' ' + pn(i), l, p[k], sv]); }); lst(p.perf).forEach((ln) => SR.push([rl(i) + ' ' + pn(i), '성능', ln, perfSrc(p, ln)])); });
-    X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(SR), '값의 출처'); X.writeFile(wb, (S.doc === 'trk' ? '실적자료' : '제품변경_분석보고서') + '.xlsx'); toast('엑셀 파일을 저장했습니다 (보고서 쪽별 시트 + 수식 시트)');
+    A.push([], ['────────────────────────────────────────'], []);
+    const OF = A.length, cw = calcSheet(X, M, OF);
+    const T = [[], ['[시공 실적]'], ['제품', '시공 실적']]; S.ps.forEach((p, i) => lst(p.tracks).forEach((t) => T.push([rl(i) + ' ' + pn(i), t])));
+    const SR = [[], ['[값의 출처]'], ['제품', '항목', '값', '출처']]; colsOf(M).forEach((i) => { const p = S.ps[i]; [['svr', '고형분 SVR'], ['dft', '표준 도막'], ['cov', '이론 도포면적'], ['pack', '캔 용량'], ['price', '캔당 단가'], ['dry', '건조시간'], ['recoat', '재도장 간격'], ['pot', '가사시간'], ['env', '적용 온도·습도'], ['method', '도장 방법'], ['voc', 'VOC'], ['heat', '내열온도'], ['life', '보수주기'], ['iso', 'ISO 12944'], ['certs', '인증서']].forEach(([k, l]) => { const sv = srcOf(p, k); if (sv) SR.push([rl(i) + ' ' + pn(i), l, p[k], sv]); }); lst(p.perf).forEach((ln) => SR.push([rl(i) + ' ' + pn(i), '성능', ln, perfSrc(p, ln)])); });
+    const ws = X.utils.aoa_to_sheet(A), tail = T.concat(SR);
+    Object.keys(cw).forEach((k) => { if (k !== '__end') ws[k] = cw[k]; });
+    let row = cw.__end + 1; tail.forEach((r) => { r.forEach((v, ci) => { if (v !== '' && v != null) ws[col(ci) + (row + 1)] = typeof v === 'number' ? { t: 'n', v } : { t: 's', v: String(v) }; }); row++; });
+    const mc = Math.max(A.reduce((m, r) => Math.max(m, r.length), 1), 6); ws['!ref'] = 'A1:' + col(mc - 1) + row; ws['!cols'] = Array.from({ length: mc }, (_, i) => ({ wch: i === 0 ? 46 : 20 }));
+    X.utils.book_append_sheet(wb, ws, '보고서');
+    X.writeFile(wb, (S.doc === 'trk' ? '실적자료' : '제품변경_분석보고서') + '.xlsx'); toast('엑셀 파일을 저장했습니다 (보고서 쪽별 시트 + 수식 시트)');
   } catch (e) { const A = rowsFor(M), q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"', b = new Blob(['﻿' + A.map((r) => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '제품비교.csv'; document.body.appendChild(a); a.click(); a.remove(); toast('엑셀을 만들지 못해 CSV로 저장했습니다'); }
   busy('');
 }
