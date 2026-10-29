@@ -2423,7 +2423,7 @@ const rec=p=>({dft:+p.dft||0,svr:+p.svr||0,loss:10,tr:p.tr?+(p.tr*100).toFixed(1
 const UN=p=>/kg|㎏/i.test((p&&p.un)||'')?'kg':'L';
 function calc(c){const p=PC(c.n);if(!p)return null;const e=ev(c,p),dft=e.dft,svr=e.svr;if(!dft||!svr)return null;const pk=+p.mk||+p.pk||18,L=e.loss/100,thv=dft/(svr*10),acv=thv/(1-L),kg=UN(p)=='kg'&&+p.sg>0,fm=kg?+p.sg:1,th=thv*fm,ac=acv*fm,up=(+c.price||0)/pk,rt=svr*10/dft/fm;
 const o=[{nm:c.n||p.n,use:p.g||p.d,th,ac,a1:[pk*rt,pk*rt*(1-L)],u:up,amt:ac*up,pk}],r=e.tr/100;
-if(r>0){const tk=+p.ts||18,tp=(+c.tprice||0)/tk;o.push({nm:'└ 전용 희석제: '+(p.tn||'희석제')+(p.tc&&p.tc!=p.tn?' ('+p.tc+')':''),use:'희석제 '+(p.tc||''),th:thv*r,ac:acv*r,a1:null,u:tp,amt:acv*r*tp,pk:tk})}return o}
+if(r>0){const tk=+p.ts||18,tp=(+c.tprice||0)/tk;o.push({nm:'└ 전용 희석제: '+tnClean(p.tn||'희석제')+(p.tc&&p.tc!=p.tn?' ('+p.tc+')':''),use:'희석제 '+(p.tc||''),th:thv*r,ac:acv*r,a1:null,u:tp,amt:acv*r*tp,pk:tk})}return o}
 function U(i,k,v){const c=S.coats[i];c[k]=v;if(k=='n'){const p=P(v);c.dft=c.tr=c.loss='';c.svr=p&&p.svr||'';sv();return cards()}res();sv()}
 const CI={dft:SV('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17.5l9 5 9-5" opacity=".55"/>'),svr:SV('<path d="M6 18L18 6"/><circle cx="7.5" cy="7.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/>'),loss:SV('<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>'),tr:SV('<path d="M12 3c-3.4 4.3-6 7.6-6 11a6 6 0 0 0 12 0c0-3.4-2.6-6.7-6-11z"/>'),area:SV('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),price:SV('<circle cx="12" cy="12" r="9"/><path d="M7.5 9l2 7 2.5-5 2.5 5 2-7M7 12h10M7.5 14.2h9"/>'),th:SV('<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/>'),flask:SV('<path d="M9 3h6M10 3v6l-5.5 9.5A1.5 1.5 0 0 0 5.8 21h12.4a1.5 1.5 0 0 0 1.3-2.5L14 9V3"/><path d="M7.5 15h9"/>')};
 const EXP={dft:'예: 200',svr:'예: 70',loss:'예: 10',tr:'예: 5',price:'예: 45,000',tprice:'예: 3,000'};
@@ -2853,7 +2853,7 @@ function ex(){const H=['제품명','제조사','일반명','용도','출규','�
 function applyLock(){const i=$('#ar');if(!i)return;S.lock=false;i.readOnly=false;i.style.background=''}
 function shareCards(){const A=+S.area||1,fl=x=>F(Math.floor(x/10)*10,0),C=[];let tot=0,T2=0,n=0;
 S.coats.forEach((c,i)=>{const r=calc(c);if(!r)return;n++;const p=PC(c.n),Ac=+c.area||A,a=r[0],t=r[1],u=UN(p),s=r.reduce((x,y)=>x+y.amt,0),q=(x,un)=>{const v=x.ac*Ac;return F(v)+un+' → '+Math.ceil(v/x.pk-1e-9)+'말'};const ct=Ac>0?f10(a.amt*Ac)+(t?f10(t.amt*Ac):0):0;tot+=s;T2+=ct;
-const R=[['소요량','이론 '+F(a.th)+u+'/㎡ · 실제 '+F(a.ac)+u+'/㎡'],['Loss(로스율)',F(ev(c,p).loss)+'%']];if(t)R.push(['희석제',String(p.tn||'희석제').replace(/\s*\n\s*/g,' ')+' · 희석율 '+F(ev(c,p).tr)+'%']);
+const R=[['소요량','이론 '+F(a.th)+u+'/㎡ · 실제 '+F(a.ac)+u+'/㎡'],['Loss(로스율)',F(ev(c,p).loss)+'%']];if(t)R.push(['희석제',tnClean(p.tn||'희석제')+' · 희석율 '+F(ev(c,p).tr)+'%']);
 if(s>0)R.push(['㎡단가',F(s,0)+'원/㎡'+(t&&t.amt>0?' (제품 '+F(a.amt,0)+' + 희석 '+F(t.amt,0)+')':'')]);
 if(Ac>0){R.push(['필요 물량','제품 '+q(a,u)+(t?' / 희석제 '+q(t,'L'):'')]);if(s>0)R.push(['총 자재비',F(ct,0)+'원'])}
 C.push({t:od(i+1)+' · '+c.n,sub:(+c.price>0?'말당 '+F(+c.price,0)+'원':'')+(Ac>0?(+c.price>0?' · ':'')+F(Ac)+'㎡':''),use:p.us||p.g||p.d||'',R})});
@@ -2928,16 +2928,19 @@ function rdHTML(){
  if(!cs.length)return '<div class="rdw"><div class="rdn">제품을 선택하고 값을 입력하면 세부 내역이 표시됩니다</div></div>';
  let sp='',dt='',sum=0;
  cs.forEach((x,j)=>{const c=x.c,p=PC(c.n)||{},e=ev(c,p),a=x.r[0],t=x.r[1],u=UN(p),uu=u=='kg'?'kg':'L',Ac=+c.area||A0,q=a.ac*Ac,tq=t?t.ac*Ac:0;
-  sp+=`<div class="rdr sx"><span>${x.i+1}${lab[j]?' '+lab[j]:''}</span><span class="l">${esc(p.n)}${p.mf?`<em>${esc(p.mf)}</em>`:''}</span><span>${e.dft?F(e.dft):'-'}</span><span>${e.svr?F(e.svr):'-'}</span><span>${+p.sg?F(+p.sg):'-'}</span><span class="qq">${Ac>0?F(q)+' '+uu:'-'}</span></div>${t?`<div class="rdr sx tnr"><span>└</span><span class="l">${esc(String(p.tn||'희석제').replace(/\s*\n\s*/g,' '))}<em>희석제(신나)</em></span><span>-</span><span>-</span><span>-</span><span class="qq">${Ac>0?F(tq)+' L':'-'}</span></div>`:''}`;
+  sp+=`<div class="rdr sx"><span>${x.i+1}${lab[j]?' '+lab[j]:''}</span><span class="l">${esc(p.n)}${p.mf?`<em>${esc(p.mf)}</em>`:''}</span><span>${e.dft?F(e.dft):'-'}</span><span>${e.svr?F(e.svr):'-'}</span><span>${+p.sg?F(+p.sg):'-'}</span><span class="qq">${Ac>0?F(q)+' '+uu:'-'}</span></div>${t?`<div class="rdr sx tnr"><span>└</span><span class="l">${esc(tnClean(p.tn||'희석제'))}<em>희석제(신나)</em></span><span>-</span><span>-</span><span>-</span><span class="qq">${Ac>0?F(tq)+' L':'-'}</span></div>`:''}`;
   const row=(nm,sub,spec,qty,pr,gs)=>{const am=Math.round((+qty||0)*(+pr||0));sum+=am;return `<div class="rdr dt${gs?' gs':''}"><span class="l"><b>${nm}</b>${sub?`<small>${sub}</small>`:''}</span><span>${spec}</span><span>${F(qty,0)}</span><span>${pr?F(+pr,0):'-'}</span><span class="am">${F(am,0)}</span></div>`};
   dt+=row(od(x.i+1)+' · '+esc(p.n),'면적 '+F(Ac)+'㎡','1말 ('+F(a.pk)+u+')',Ac>0?Math.ceil(a.ac*Ac/a.pk-1e-9):0,+c.price||0,1);
-  if(t)dt+=row('└ '+esc(String(p.tn||'희석제').replace(/\s*\n\s*/g,' ')),'','1캔 ('+F(t.pk)+'L)',Ac>0?Math.ceil(t.ac*Ac/t.pk-1e-9):0,+c.tprice||0,0)});
+  if(t)dt+=row('└ '+esc(tnClean(p.tn||'희석제')),'','1캔 ('+F(t.pk)+'L)',Ac>0?Math.ceil(t.ac*Ac/t.pk-1e-9):0,+c.tprice||0,0)});
  (window.subRows?subRows():[]).forEach(r=>{const am=Math.round(r.q*r.p);sum+=am;dt+=`<div class="rdr dt gs"><span class="l"><b>${esc(r.n)}</b>${r.m?`<small>${esc(r.m)}</small>`:''}</span><span>${esc(r.s)}</span><span>${F(r.q,r.u=='㎡'?2:0)}</span><span>${r.p?F(+r.p,0):'-'}</span><span class="am">${F(am,0)}</span></div>`});const vat=Math.round(sum*.1);
  return `<div class="rdw"><div class="rdh tsp">도장 시스템 및 제품 사양</div><div class="rdt tsp"><div class="rdr sx h"><span>구분</span><span>제품 · 제조사</span><span>DFT</span><span>SVR</span><span>비중</span><span>산출물량</span></div>${sp}</div>
 <div class="rdh tdt">견적 세부 내역 <small>캔 구매 기준</small></div><div class="rdt tdt"><div class="rdr dt h"><span>품명</span><span>규격</span><span>수량</span><span>단가</span><span>금액</span></div>${dt}</div>
 <div class="rdsum"><div><span>공급가액</span><b>${F(sum,0)}</b></div><div><span>VAT (10%)</span><b>${F(vat,0)}</b></div><div class="tt"><span>합계 (VAT 포함)</span><b>${F(sum+vat,0)}원</b></div></div></div>`}
 
 const esSf=(fn,fb)=>{try{return fn()}catch(x){window.ESERR=(x&&x.message)||String(x);return fb}};
+function tnClean(s){let t=String(s==null?'':s).replace(/\s*\n\s*/g,' ');
+ t=t.replace(/\s*[(（][^)）]*(?:추천|권장)?\s*희석[^)）]*[)）]/g,'').replace(/\s*[(（][^)）]*\d\s*%[^)）]*[)）]/g,'').replace(/\s*[,:·\/\-]?\s*(?:추천|권장)\s*희석(?:율|비율|률)?[^]*$/,'').replace(/\s+/g,' ').trim();
+ return t||'희석제'}
 function esSyn(c){const p=esSf(()=>PX(c.n),null)||{},pk=+p.mk||+p.pk||18;return [{nm:c.n||'제품명 입력',use:'',th:0,ac:0,a1:null,u:(+c.price||0)/pk,amt:0,pk,nc:1}]}
 function esGroups(){return esSf(esGroups0,[])}
 function esGroups0(){const E=esS(),G=[];
@@ -2949,7 +2952,7 @@ function esGroups0(){const E=esS(),G=[];
 function esRows(){return esSf(esRows0,[])}
 function esRows0(){const R=[];esGroups().forEach((g,gi)=>{g.L.forEach(x=>{try{const p=P(x.c.n),Ac=+x.c.area||g.A,a=x.r[0],t=x.r[1],u=UN(p);
  R.push({k:g.k+x.i,g:g.k+x.i,sn:g.sn||'',n:(g.k=='s'?x.ord:od(x.i+1))+' · '+x.c.n,s:'1말 ('+F(a.pk)+u+')',q:a.nc?'':(Ac>0?Math.ceil(a.ac*Ac/a.pk-1e-9):0),p:+x.c.price||0,m:a.nc?'':'면적 '+F(Ac)+'㎡',nc:a.nc?1:0});
- if(t)R.push({k:g.kt+x.i,g:g.k+x.i,n:'└ '+String(p.tn||'희석제').replace(/\s*\n\s*/g,' '),s:'1캔 ('+F(t.pk)+'L)',q:Ac>0?Math.ceil(t.ac*Ac/t.pk-1e-9):0,p:+x.c.tprice||0,m:''});
+ if(t)R.push({k:g.kt+x.i,g:g.k+x.i,n:'└ '+tnClean(p.tn||'희석제'),s:'1캔 ('+F(t.pk)+'L)',q:Ac>0?Math.ceil(t.ac*Ac/t.pk-1e-9):0,p:+x.c.tprice||0,m:''});
 }catch(er){window.ESERR=(er&&er.message)||String(er);R.push({k:g.k+x.i,g:g.k+x.i,sn:g.sn||'',n:(g.k=='s'?x.ord:od(x.i+1))+' · '+(x.c&&x.c.n||'제품명 입력'),s:'수량·단가 직접 입력',q:'',p:+(x.c&&x.c.price)||0,m:'',nc:1})}});
  const LB=lbCalc(g.lab,g.A);if(LB){const d2=v=>+v.toFixed(2),gk='L'+g.k+gi,ps=(g.lab||{}).ps,px=w=>LB.B?'':' · 투입량 '+(+w.toFixed(4))+'인/㎡'+(ps?' · '+ps.s+(ps.v?'':'(검증 전)'):'');
   if(LB.qp>0)R.push({k:'lp'+gk,g:gk,sn:'',n:'노무비 · 도장공',s:'인',q:d2(LB.qp),p:LB.s.rp,m:(g.sn||'전체')+(LB.m>1?' · 할증 '+LB.s.sc+'%':'')+px(LB.pp),dec:1});
@@ -2967,7 +2970,7 @@ function esHTML0(){
  const row=(l,v)=>`<div class="epr"><span>${l}</span><b>${esc(v)||'-'}</b></div>`;
  const info=`<div class="epi2"><div class="epc"><div class="epct">공급<br>받는자</div><div class="epb">${row('수신',V[1])}${row('현장/공사명',V[3])}${row('견적일자',V[0])}${row('견적번호',qtLabel(E))}${row('유효기간',V[4])}${row('결제조건',V[5])}</div></div><div class="epc"><div class="epct">공급자</div><div class="epb">${row('상호',SP.n)}${row('대표자',SP.r)}${row('담당자',SP.m)}${row('연락처',SP.c)}${row('주소',SP.a)}</div></div></div>`;
  const sp=esGroups().map(g=>(g.sn?`<div class="eptr sgh"><span>${esc(g.sn)}</span></div>`:'')+g.L.map(x=>{const p=P(x.c.n)||{},e=ev(x.c,p),a=x.r[0],t=x.r[1],u=UN(p),Ac=+x.c.area||g.A,q=a.ac*Ac,tq=t?t.ac*Ac:0,uu=u=='kg'?'kg':'L';
-  const sm=a.amt,pu=(+x.c.price||0)>0,tpu=(+x.c.tprice||0)>0,tn=String(p.tn||'희석제').replace(/\s*\n\s*/g,' ');
+  const sm=a.amt,pu=(+x.c.price||0)>0,tpu=(+x.c.tprice||0)>0,tn=tnClean(p.tn||'희석제');
   return `<div class="eptr"><span>${g.k=='s'?'S':''}${g.k=='s'?syK(x.i)+1:x.i+1}차${x.lab?`<small>${esc(x.lab)}</small>`:''}</span><span class="l">${esc(x.c.n)}${p.mf?`<em>${esc(p.mf)}</em>`:''}</span><span>${e.dft?F(e.dft):'-'}</span><span>${+p.tr>0?F(+(p.tr*100).toFixed(1)):'-'}</span><span class="th">${a.nc?'-':F(a.th)+`<small>${uu}/㎡</small>`}</span><span class="th ac">${a.nc?'-':F(a.ac)+`<small>${uu}/㎡</small>`}</span><span class="th pr">${pu&&!a.nc?F(sm,0):'-'}<small>${pu&&!a.nc?'원/㎡':''}</small></span><span class="qq">${Ac>0&&!a.nc?F(q)+' '+uu:'-'}</span></div>${t?`<div class="eptr tnr"><span>└</span><span class="l">${esc(tn)}</span><span>-</span><span>-</span><span class="th">${F(t.th,3)}<small>L/㎡</small></span><span class="th ac">${F(t.ac,3)}<small>L/㎡</small></span><span class="th pr">${tpu?F(t.amt,0):'-'}<small>${tpu?'원/㎡':''}</small></span><span class="qq">${Ac>0?F(tq)+' L':'-'}</span></div>`:''}`}).join('')).join('');
  let no=0,prev=null,psn=null;
  const ar=R.map(r=>{no++;const sh=(r.sn&&r.sn!==psn)?`<div class="etr sgh"><div class="l"><b>${esc(r.sn)}</b></div></div>`:'';psn=r.sn||psn;const o=E.o[r.k]||{},q=fm(o.q!==undefined?o.q:r.q),pr=fm(o.p!==undefined?o.p:r.p),gs=r.g!==prev;prev=r.g;return sh+`<div class="ei etr${gs?' gs':''}" data-k="${r.k}"><div class="l"><b>${esc(r.n)}</b>${r.m?`<small>${esc(r.m)}</small>`:''}</div><div>${esc(r.s)}</div><div><input class="r" inputmode="decimal" value="${esc(q)}" oninput="esO('${r.k}','q',this.value)"></div><div><input class="r" inputmode="decimal" value="${esc(pr||'')}" oninput="esO('${r.k}','p',this.value)"></div><div class="am"></div></div>`}).join('');
@@ -3109,7 +3112,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v521',d:'2026.10.29'};
+const APPV={v:'v522',d:'2026.10.29'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
