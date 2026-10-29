@@ -2919,7 +2919,7 @@ function hh(){document.documentElement.style.setProperty('--hh',(($('.hd')||{}).
 const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function rfit(){}
 function rptHTML(){const r=$('#rs');if(!r||!r.querySelector('.xpr'))return '';const c=r.cloneNode(true);c.querySelectorAll('button').forEach(x=>x.remove());c.querySelectorAll('.gl,#cgl,#hgl,#dgl').forEach(x=>x.remove());c.querySelectorAll('.xfd>summary').forEach(x=>x.textContent='산출 공식 · 경고 안내');c.querySelectorAll('details').forEach(d=>d.setAttribute('open',''));return `<div class="a4 sc"><div class=rt0><b>일위대가표</b><span>${new Date().toLocaleDateString('ko-KR')}${' · 기본면적 '+F(+S.area||1)+'㎡'}</span></div><div class=rbody>${c.innerHTML}</div></div>`}
-function rpt(){if(!S.coats.some(c=>calc(c)))return tt('출력할 결과가 없습니다<br>제품을 선택하고 값을 입력하세요');window.ESRP=1;est();esPv()}
+function rpt(){if(!S.coats.some(c=>calc(c)||(c&&String(c.n||'').trim())))return tt('출력할 결과가 없습니다<br>제품을 선택하고 값을 입력하세요');window.ESRP=1;est();esPv()}
 const ldp=()=>window.html2canvas?Promise.resolve():Promise.all(['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'].map(u=>new Promise((o,e)=>{const s=document.createElement('script');s.src=u;s.onload=o;s.onerror=e;document.head.append(s)})));
 const ESL=['견적일자','수 신','현장명','공사명','유효기간','결제조건'];
 function esS(){S.es=S.es||{};const E=S.es;E.l=E.l||[...ESL];E.v=E.v||[];E.o=E.o||{};E.x=E.x||[];E.nt=E.nt||'';return E}
@@ -2937,14 +2937,15 @@ function rdHTML(){
 <div class="rdh tdt">견적 세부 내역 <small>캔 구매 기준</small></div><div class="rdt tdt"><div class="rdr dt h"><span>품명</span><span>규격</span><span>수량</span><span>단가</span><span>금액</span></div>${dt}</div>
 <div class="rdsum"><div><span>공급가액</span><b>${F(sum,0)}</b></div><div><span>VAT (10%)</span><b>${F(vat,0)}</b></div><div class="tt"><span>합계 (VAT 포함)</span><b>${F(sum+vat,0)}원</b></div></div></div>`}
 
+function esSyn(c){const p=PX(c.n)||{},pk=+p.mk||+p.pk||18;return [{nm:c.n||'제품명 입력',use:'',th:0,ac:0,a1:null,u:(+c.price||0)/pk,amt:0,pk,nc:1}]}
 function esGroups(){const E=esS(),G=[];
- if(E.pq!==0){const cs=S.coats.map((c,i)=>({c,i,r:calc(c)})).filter(x=>x.r&&!(E.hid&&E.hid['c'+x.i])),lab=syLabsOld(cs.length);G.push({k:'c',kt:'t',tag:'PQC',lab:S.lab||{},A:+S.area||1,L:cs.map((x,j)=>({...x,lab:lab[j]||'',ord:od(x.i+1)}))})}
+ if(E.pq!==0){const cs=S.coats.map((c,i)=>({c,i,r:calc(c)||(c&&String(c.n||'').trim()?esSyn(c):null)})).filter(x=>x.r&&!(E.hid&&E.hid['c'+x.i])),lab=syLabsOld(cs.length);G.push({k:'c',kt:'t',tag:'PQC',lab:S.lab||{},A:+S.area||1,L:cs.map((x,j)=>({...x,lab:lab[j]||'',ord:od(x.i+1)}))})}
  if(E.sy){const lb=syLb(),gs=syGr(),sel=(Array.isArray(E.syg)&&E.syg.length?E.syg:gs.map((g,k)=>k)).filter(k=>gs[k]);
-  sel.forEach(k=>{const gr=gs[k],L=gr.idx.map(i=>({c:SY.layers[i],i,r:calc(SY.layers[i])})).filter(x=>x.r&&!(E.hid&&E.hid['s'+x.i]));
+  sel.forEach(k=>{const gr=gs[k],L=gr.idx.map(i=>{const c=SY.layers[i],r=calc(c);return r?{c,i,r}:{c:String(c.n||'').trim()?c:Object.assign({},c,{n:'제품명 입력'}),i,r:esSyn(c)}}).filter(x=>x.r&&!(E.hid&&E.hid['s'+x.i]));
    if(L.length)G.push({k:'s',kt:'y',tag:'SYS',lab:SY.groups[k]||{},sn:gr.name,A:+((SY.groups[k]||{}).area)||+SY.area||1,L:L.map(x=>({...x,lab:lb[x.i]||'',ord:lb[x.i]||od(x.i+1)}))})})}
  return G}
 function esRows(){const R=[];esGroups().forEach((g,gi)=>{g.L.forEach(x=>{const p=P(x.c.n),Ac=+x.c.area||g.A,a=x.r[0],t=x.r[1],u=UN(p);
- R.push({k:g.k+x.i,g:g.k+x.i,sn:g.sn||'',n:(g.k=='s'?x.ord:od(x.i+1))+' · '+x.c.n,s:'1말 ('+F(a.pk)+u+')',q:Ac>0?Math.ceil(a.ac*Ac/a.pk-1e-9):0,p:+x.c.price||0,m:'면적 '+F(Ac)+'㎡'});
+ R.push({k:g.k+x.i,g:g.k+x.i,sn:g.sn||'',n:(g.k=='s'?x.ord:od(x.i+1))+' · '+x.c.n,s:'1말 ('+F(a.pk)+u+')',q:a.nc?'':(Ac>0?Math.ceil(a.ac*Ac/a.pk-1e-9):0),p:+x.c.price||0,m:a.nc?'':'면적 '+F(Ac)+'㎡',nc:a.nc?1:0});
  if(t)R.push({k:g.kt+x.i,g:g.k+x.i,n:'└ '+String(p.tn||'희석제').replace(/\s*\n\s*/g,' '),s:'1캔 ('+F(t.pk)+'L)',q:Ac>0?Math.ceil(t.ac*Ac/t.pk-1e-9):0,p:+x.c.tprice||0,m:''});
 });
  const LB=lbCalc(g.lab,g.A);if(LB){const d2=v=>+v.toFixed(2),gk='L'+g.k+gi,ps=(g.lab||{}).ps,px=w=>LB.B?'':' · 투입량 '+(+w.toFixed(4))+'인/㎡'+(ps?' · '+ps.s+(ps.v?'':'(검증 전)'):'');
@@ -2963,7 +2964,7 @@ function esHTML(){
  const info=`<div class="epi2"><div class="epc"><div class="epct">공급<br>받는자</div><div class="epb">${row('수신',V[1])}${row('현장/공사명',V[3])}${row('견적일자',V[0])}${row('견적번호',qtLabel(E))}${row('유효기간',V[4])}${row('결제조건',V[5])}</div></div><div class="epc"><div class="epct">공급자</div><div class="epb">${row('상호',SP.n)}${row('대표자',SP.r)}${row('담당자',SP.m)}${row('연락처',SP.c)}${row('주소',SP.a)}</div></div></div>`;
  const sp=esGroups().map(g=>(g.sn?`<div class="eptr sgh"><span>${esc(g.sn)}</span></div>`:'')+g.L.map(x=>{const p=P(x.c.n)||{},e=ev(x.c,p),a=x.r[0],t=x.r[1],u=UN(p),Ac=+x.c.area||g.A,q=a.ac*Ac,tq=t?t.ac*Ac:0,uu=u=='kg'?'kg':'L';
   const sm=a.amt,pu=(+x.c.price||0)>0,tpu=(+x.c.tprice||0)>0,tn=String(p.tn||'희석제').replace(/\s*\n\s*/g,' ');
-  return `<div class="eptr"><span>${g.k=='s'?'S':''}${g.k=='s'?syK(x.i)+1:x.i+1}차${x.lab?`<small>${esc(x.lab)}</small>`:''}</span><span class="l">${esc(x.c.n)}${p.mf?`<em>${esc(p.mf)}</em>`:''}</span><span>${e.dft?F(e.dft):'-'}</span><span>${e.svr?F(e.svr):'-'}</span><span class="th">${F(a.th)}<small>${uu}/㎡</small></span><span class="th ac">${F(a.ac)}<small>${uu}/㎡</small></span><span class="th pr">${pu?F(sm,0):'-'}<small>${pu?'원/㎡':''}</small></span><span class="qq">${Ac>0?F(q)+' '+uu:'-'}</span></div>${t?`<div class="eptr tnr"><span>└</span><span class="l">${esc(tn)}<em>희석제(신나)</em></span><span>-</span><span>-</span><span class="th">${F(t.th,3)}<small>L/㎡</small></span><span class="th ac">${F(t.ac,3)}<small>L/㎡</small></span><span class="th pr">${tpu?F(t.amt,0):'-'}<small>${tpu?'원/㎡':''}</small></span><span class="qq">${Ac>0?F(tq)+' L':'-'}</span></div>`:''}`}).join('')).join('');
+  return `<div class="eptr"><span>${g.k=='s'?'S':''}${g.k=='s'?syK(x.i)+1:x.i+1}차${x.lab?`<small>${esc(x.lab)}</small>`:''}</span><span class="l">${esc(x.c.n)}${p.mf?`<em>${esc(p.mf)}</em>`:''}</span><span>${e.dft?F(e.dft):'-'}</span><span>${e.svr?F(e.svr):'-'}</span><span class="th">${a.nc?'-':F(a.th)+`<small>${uu}/㎡</small>`}</span><span class="th ac">${a.nc?'-':F(a.ac)+`<small>${uu}/㎡</small>`}</span><span class="th pr">${pu&&!a.nc?F(sm,0):'-'}<small>${pu&&!a.nc?'원/㎡':''}</small></span><span class="qq">${Ac>0&&!a.nc?F(q)+' '+uu:'-'}</span></div>${t?`<div class="eptr tnr"><span>└</span><span class="l">${esc(tn)}<em>희석제(신나)</em></span><span>-</span><span>-</span><span class="th">${F(t.th,3)}<small>L/㎡</small></span><span class="th ac">${F(t.ac,3)}<small>L/㎡</small></span><span class="th pr">${tpu?F(t.amt,0):'-'}<small>${tpu?'원/㎡':''}</small></span><span class="qq">${Ac>0?F(tq)+' L':'-'}</span></div>`:''}`}).join('')).join('');
  let no=0,prev=null,psn=null;
  const ar=R.map(r=>{no++;const sh=(r.sn&&r.sn!==psn)?`<div class="etr sgh"><div class="l"><b>${esc(r.sn)}</b></div></div>`:'';psn=r.sn||psn;const o=E.o[r.k]||{},q=fm(o.q!==undefined?o.q:r.q),pr=fm(o.p!==undefined?o.p:r.p),gs=r.g!==prev;prev=r.g;return sh+`<div class="ei etr${gs?' gs':''}" data-k="${r.k}"><div class="l"><b>${esc(r.n)}</b>${r.m?`<small>${esc(r.m)}</small>`:''}</div><div>${esc(r.s)}</div><div><input class="r" inputmode="decimal" value="${esc(q)}" oninput="esO('${r.k}','q',this.value)"></div><div><input class="r" inputmode="decimal" value="${esc(pr||'')}" oninput="esO('${r.k}','p',this.value)"></div><div class="am"></div></div>`}).join('');
  const xr=E.x.map((x,j)=>{no++;return `<div class="ei etr gs" data-k="x${j}"><div class="l"><input value="${esc(x.n)}" placeholder="품명" oninput="esX(${j},'n',this.value)"></div><div><input value="${esc(x.s)}" placeholder="규격" oninput="esX(${j},'s',this.value)"></div><div><input class="r" inputmode="decimal" value="${esc(fm(x.q))}" oninput="esX(${j},'q',this.value)"></div><div><input class="r" inputmode="decimal" value="${esc(fm(x.p))}" oninput="esX(${j},'p',this.value)"></div><div class="am"></div></div>`}).join('');
@@ -3014,7 +3015,7 @@ const xr=E.x.map((x,j)=>it('x'+j,`<input class="znm" value="${esc(x.n)}" placeho
 const sb=`<div class="zsrc"><button class="zs1" onclick="esAdd();esFre()">품목+</button><button class="zs2" onclick="esGo('sy')">도장S</button><button class="zs3" onclick="esGo('pq')">일위대가표</button></div>`;
 return `<div class="zc zsup">${hd(PQI.admin,'공급자 정보','Supplier Information')}<div class="zsr">${ed?spRows.map(([l,k])=>`<label><span>${l}</span><input value="${esc(SP[k]||'')}" oninput="esSp('${k}',this.value)"></label>`).join(''):spRows.map(([l,k])=>`<div><span>${l}</span><b>${esc(SP[k]||'-')}</b></div>`).join('')}</div><button class="zed" onclick="esEd(${ed?0:1})" aria-label="${ed?'완료':'수정'}">${ed?'✓':QI.pen}</button></div>
 <div class="zc zinf">${hd(PQI.quote,'견적 정보','Quotation Info')}<div class="zig">${fld('견적일자',V[0]||esToday(),"esQ(0,this.value)",'',QI.cal,'date')}${fld('견적번호',E.no,"esNo(this.value)",'CC-2610-0001')}${fld('현장명 / 공사명',V[3],"esQ(3,this.value)")}</div><div class="zig z2">${fld('수신',V[1],"esQ(1,this.value)")}${fld('유효기간',V[4],"esQ(4,this.value)")}${fld('결제조건',V[5],"esQ(5,this.value)")}</div></div>
-<div class="zc">${hd(syIc.roll,'도장 품목','Paint Items',sb)}${ar+xr||'<div class="zem">일위대가표에 제품·단가를 입력하면 자동 반영됩니다</div>'}</div>
+<div class="zc">${hd(syIc.roll,'도장 품목','Paint Items',sb)}${R.some(r=>r.nc)?'<div class="zem" style="padding:8px 10px;margin:0 0 8px;text-align:left;font-size:12.5px;line-height:1.45;color:#b45309;background:#fff7ed;border:1px solid #fdba74;border-radius:10px">SVR(고형분)이 없는 제품은 소요량을 계산할 수 없습니다. <b>수량·단가</b>를 직접 입력하세요.</div>':''}${ar+xr||'<div class="zem">일위대가표에 제품·단가를 입력하면 자동 반영됩니다</div>'}</div>
 <div class="zc zs2"><div class="zst"><i>${PQI.quote}</i><b>공급가액 및 부가세</b></div><div class="ztot"><div><small>공급가액</small><b><span id="fS">0</span><em>원</em></b></div><div><small>부가세 (10%)</small><b><span id="fV">0</span><em>원</em></b></div><div class="big"><small><i>${PQI.db}</i>총 견적금액</small><b><span id="fT">0</span><em>원</em></b></div></div></div>
 <div class="zc zs2"><div class="zst"><i>${PQI.tds}</i><b>비고</b></div><textarea class="znt" oninput="esH('nt',0,this.value);esRe()" placeholder="비고를 입력하세요">${esc(E.nt)}</textarea></div>`}
 async function esImg(){const src=$('#es .esh'),bt=$('#esb');bt.textContent='만드는 중…';let box;try{await ldp();
@@ -3103,7 +3104,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v517',d:'2026.10.29'};
+const APPV={v:'v518',d:'2026.10.29'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -3293,7 +3294,7 @@ function syAdd(){syPick(-1)}
 function syNew(){syPick(-1)}
 function syGa(g,v){if(!SY.groups[g])return;SY.groups[g].area=v;syS();syCalc()}
 function syDel(){if(!SY.layers.length)return tt('삭제할 제품이 없습니다');const n=SY.layers.length,lb=syLb()[n-1];ask('마지막 코트('+lb+')를 삭제할까요?',()=>{SY.layers.pop();syNorm();syS();syRender()})}
-function syQuote(sel){if(!SY.layers.some(l=>calc(l)))return tt('견적서를 만들 제품과 값을 먼저 입력하세요');
+function syQuote(sel){if(!SY.layers.length)return tt('견적서를 만들 제품을 먼저 추가하세요');
  if(!Array.isArray(sel)){if(SY.groups.length>1)return syOutPick('quote');sel=[0]}
  const E=esS();E.sy=1;E.pq=0;E.syg=sel.slice();E.hid=E.hid||{};Object.keys(E.hid).forEach(x=>{if(x[0]=='s')delete E.hid[x]});sv();window.ESRP=0;est()}
 function syOutPick(kind){
@@ -3574,7 +3575,7 @@ function syParseSpec(raw,fname){
  const isStop=l=>/^[*※▶■●]/.test(l)||/^[(（]\s*\d*\s*[)）]\s*(?:하\s*도|중\s*도|상\s*도)/.test(l)||/^제\s*제\s*품|^제\s*품\s*별|^도\s*장\s*방\s*법/.test(l)||/^\d\)\s*(?:내부|외부)/.test(l);
  const variants=[];let tableEnd=0;
  hdrIdx.forEach(h0=>{
-  let heading='';for(let k=h0-1;k>=Math.max(0,h0-2);k--){const t=L[k].replace(/(도\s*장\s*사\s*양\s*)+/g,'').replace(/^\d\)\s*/,'').trim();if(t&&t.length<=30&&!/\d{2,}|㎛|제품명|도막두께|구분|^구$|^분$/.test(t)&&!/^[*※]/.test(t)&&!/[,，.。]|다$|함$|음$|요$|을$|를$/.test(t.replace(/\(.*?\)/g,''))){heading=t;break}}
+  let heading='';for(let k=h0-1;k>=Math.max(0,h0-2);k--){const t=L[k].replace(/(도\s*장\s*사\s*양\s*서?\s*)+/g,'').replace(/^\d\)\s*/,'').trim();if(t&&t.length<=30&&!/\d{2,}|㎛|제품명|도막두께|구분|^구$|^분$/.test(t)&&!/^[*※]/.test(t)&&!/[,，.。]|다$|함$|음$|요$|을$|를$/.test(t.replace(/\(.*?\)/g,''))){heading=t;break}}
   if(!heading&&/^\d\)\s*\S+$/.test(L[h0-1]||''))heading=L[h0-1].replace(/^\d\)\s*/,'');
   /* 같은 줄에 붙은 제목 (도 장 사 양 새 콘크리트 및 몰탈면) */
   const um=/mm/i.test(L[h0]+(L[h0+1]||''))&&!/㎛|μm/.test(L[h0]+(L[h0+1]||''))?'mm':'㎛';
@@ -3711,7 +3712,7 @@ function syParseSpec(raw,fname){
   const items=v.rows.filter(r=>r.n||r.dft!=null).map(r=>{const o={lb:r.lb||'',n:r.n||'',dft:r.dft!=null?Math.round(r.dft):''};['cnt','mix','thin','th','pot','rc','svr','nt','alt','when'].forEach(k=>{if(r[k]!==undefined&&r[k]!==''&&r[k]!==null)o[k]=r[k]});
    if(o.when&&o.when.t){const w=o.when.t,sel=v.rows.find(q=>q.alt&&(q.n+' '+q.alt.map(a=>a.n).join(' ')).includes(w.replace(/^(하도|중도|상도)\s*/,'')));const key=w.replace(/^(하도|중도|상도)\s*/,'').trim();const full=[sel&&sel.n].concat(((sel&&sel.alt)||[]).map(a=>a.n)).find(x=>x&&x.includes(key));o.when={lb:(w.match(/^(하도|중도|상도)/)||[])[1]||'하도',n:full||key}}
    return o});
-  const nm=(title+(v.heading?' · '+v.heading.replace(/\s*사양\s*$/,''):'')).trim();
+  const hd0=(v.heading||'').replace(/\s*사양\s*$/,'').trim(),nm=((!hd0||title.includes(hd0))?title:(!title||hd0.includes(title))?hd0:title+' · '+hd0).trim();
   return{name:nm,scope:scope,sub:subV(v.heading||''),env:'',life:'',spec:1,src:fname||'',items}
  }).filter(s=>s.items.length);
  return res;
@@ -3847,7 +3848,7 @@ function syImpUi(){let e=$('#syimp');const fresh=!e;if(fresh){e=document.createE
  if(sc){const q=e.querySelector('.sypk-sc');if(q)q.scrollTop=sc}}
 function syImpUse(i){const t=SYIMP.list[i];if(!t)return;if(!t.added){syAddSys(syImpClean(t));t.added=1}syImpClose();syLibPage();syLibUi();syLibUse(0);if(!document.getElementById('syalt'))tta('✓ 도장 시스템에 적용했습니다',1600)}
 function syImpClose(){const e=$('#syimp');if(e)e.remove()}
-function syImpClean(t){const c=JSON.parse(JSON.stringify(t));delete c.added;c.items=(c.items||[]).filter(i=>(i.n||'').trim());c.src=c.src||SYIMP.file;c.spec=1;const fid=syFileKeep(t);if(fid)c.fid=fid;return c}
+function syImpClean(t){const c=JSON.parse(JSON.stringify(t));delete c.added;c.items=(c.items||[]).map(i=>(i.n||'').trim()?i:Object.assign({},i,{n:((i.lb||'코트')+' 제품명 입력')}));c.src=c.src||SYIMP.file;c.spec=1;const fid=syFileKeep(t);if(fid)c.fid=fid;return c}
 /* v484 사양서 원본 파일 저장·보기: TDS 저장소와 분리된 전용 IndexedDB(spf_) — TDS 초기화·대기파일 목록과 섞이지 않음 */
 const spfDb=(m,k,v)=>new Promise((ok,no)=>{try{const q=indexedDB.open('spf_'+EDITION,1);q.onupgradeneeded=()=>q.result.createObjectStore('f');q.onerror=()=>no(q.error);q.onsuccess=()=>{const d=q.result,tx=d.transaction('f',m=='get'||m=='keys'?'readonly':'readwrite'),s=tx.objectStore('f'),r=m=='get'?s.get(k):m=='keys'?s.getAllKeys():m=='del'?s.delete(k):s.put(v,k);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);tx.oncomplete=()=>d.close();tx.onabort=()=>d.close()}}catch(e){no(e)}});
 function syFileKeep(t){const I=SYIMP;if(t&&t._f&&I&&I.fm){const f=t._f;let id=I.fm.get(f);if(!id){id='sp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);I.fm.set(f,id);f.arrayBuffer().then(buf=>spfDb('put',id,{name:f.name,type:ft(f),buf})).catch(()=>{})}return id}
@@ -12751,4 +12752,90 @@ window.CMPB=(function(){
  }})();
 </script>
 
+<script id="spx518">
+/* v518: 도장사양서 인식 보강 — OCR·표기 정규화, 번호·콜론·영문·불릿 표기, 자유 형식 보조 해석 */
+(function(){
+'use strict';
+const FW={'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9'};
+function fixLine(x){
+ let t=String(x==null?'':x).replace(/[\u3000\u00a0\u2009\u200b]/g,' ');
+ t=t.replace(/[０-９]/g,c=>FW[c]).replace(/％/g,'%').replace(/[～〜∼]/g,'~').replace(/：/g,':').replace(/[–—−]/g,'-');
+ /* 한 글자씩 띄어 인식된 구간 합치기 (3글자 이상) */
+ t=t.replace(/(?:^|(?<=\s))(?:[가-힣A-Za-z0-9%.:~\-()±\/㎛㎡℃,][ ]){2,}[가-힣A-Za-z0-9%.:~\-()±\/㎛㎡℃,](?=\s|$)/g,m=>m.replace(/ /g,''));
+ /* 숫자 토큰 안의 O/l/I 혼동 */
+ t=t.replace(/(?<![A-Za-z가-힣])[0-9OolI][0-9OolI.,:~\-±]*%?(?![A-Za-z가-힣])/g,tok=>/\d/.test(tok)?tok.replace(/[Oo]/g,'0').replace(/[lI]/g,'1'):tok);
+ /* 단위 */
+ t=t.replace(/(\d+(?:\.\d+)?)(?:\s*[~\-]\s*(\d+(?:\.\d+)?))?\s*mils?\b/gi,(m,a,b)=>Math.round(+a*25.4)+(b?'~'+Math.round(+b*25.4):'')+'㎛');
+ t=t.replace(/[µμ]\s*m\b/g,'㎛').replace(/(\d)\s*(?:um|micro(?:n|ns|meters?|metres?)|마이크론|미크론)(?![A-Za-z])/gi,'$1㎛')
+    .replace(/\bm\s*[²2]\s*\/\s*(?:l|L|ℓ|lit(?:re|er)s?|ltr)\b/g,'㎡/L').replace(/m²/g,'㎡');
+ t=t.replace(/^[•·▪■□◦○●◆◇▶▷►]\s*/,'');
+ return t.replace(/[ \t]+/g,' ').trim();
+}
+const N=s=>parseFloat(String(s).replace(/,/g,''));
+const SG_START=/^(하도실러|중도실러|상도실러|하도|중도|상도)(?=[가-힣A-Za-z0-9])/;
+const PAINT=/(도료|프라이머|프라이마|에폭시|우레탄|아크릴|징크|실리콘|불소|실러|코팅|상도|중도|하도|방수|퍼티|내화|알키드|primer|epoxy|polyurethane|acrylic|zinc|silicone|fluoro|coating|paint|finish)/i;
+function stageOf(n){n=String(n||'');return /(하도|프라이머|프라이마|징크|방청|primer|zinc)/i.test(n)&&!/상도|중도/.test(n)?'하도':/(상도|톱코트|finish|top)/i.test(n)?'상도':/(중도|MIO|미스트|intermediate)/i.test(n)?'중도':''}
+
+/* 자유 형식: 단계 + 제품명 + 두께 (줄 단위) */
+function spFree(F,fname){
+ const items=[];let cur='';
+ for(let i=0;i<F.length;i++){
+  const l=String(F[i]).replace(/^[•·▪■□◦○●◆◇▶▷►\-–*]\s*/,'');if(/습윤|WFT|wet\s*film/i.test(l))continue;
+  let m=l.match(/^(?:\d+\s*[).]\s*)?(하도실러|중도실러|상도실러|하도|중도|상도)\s*$/);if(m){cur=m[1];continue}
+  m=l.match(/^(?:\d+\s*[).]\s*)?(하도실러|중도실러|상도실러|하도|중도|상도|실러)\s+(.*)$/);
+  let lb='',rest=l;
+  if(m){lb=m[1];rest=m[2];cur=lb}else{lb=cur;rest=l.replace(/^(?:\d+\s*[).]\s*)/,'')}
+  let t=rest.match(/^(.*?)\s*(\d[\d,]*(?:\.\d+)?)\s*(㎛|μm|µm|㎜|mm)(?![A-Za-z])\s*(?:[x×]\s*)?(?:(\d)\s*회)?/);
+  if(!t||!/[가-힣A-Za-z]/.test(t[1])){const q=rest.match(/^(?:도막\s*)?(\d[\d,]*(?:\.\d+)?)\s*(㎛|μm|µm|㎜|mm)(?![A-Za-z])\s*(?:[x×]\s*)?(?:(\d)\s*회)?\s*(.+)$/);if(q)t=[q[0],q[4],q[1],q[2],q[3]]}
+  if(!t)continue;
+  let name=t[1].replace(/^[\s:：\-–·•]+|[\s:：,\-–·]+$/g,'').replace(/\s*[(（]\s*(?:도막|건조\s*도막|DFT)\s*$/,'').replace(/\s*\d\s*회$/,'').replace(/\s+\d$/,'').trim();
+  if(!/[가-힣A-Za-z]/.test(name)||name.length>40||!PAINT.test(name)&&!m)continue;
+  if(!lb)lb=stageOf(name)||(/내화/.test(name)?'중도':'')||cur;if(!lb)continue;
+  let d=N(t[2]);if(/㎜|mm/i.test(t[3]))d*=1000;if(!(d>=5&&d<=9999))continue;
+  const it={lb,n:name,dft:Math.round(d*10)/10};if(t[4]&&+t[4]>1)it.cnt=+t[4];items.push(it);
+ }
+ if(items.length<2)return null;
+ let title=String(F[0]||'').replace(/도장\s*사양서|표준\s*시방서|시방서|도장\s*사양|coating\s*specification/ig,'').replace(/^[\s\-–:·]+|[\s\-–:·]+$/g,'').trim();
+ if(!title||title.length>40||/\d{2,}\s*(?:㎛|mm)/.test(title))title=String(fname||'').replace(/\.[^.]+$/,'')||'사양서 시스템';
+ return {name:title,scope:'',sub:'',env:'',life:'',spec:1,src:fname||'',items};
+}
+
+if(typeof syParseSpec==='function'){
+ const S0=syParseSpec;
+ const EN=[[/^(?:\d+\s*[).]\s*)?(?:primer|prime\s*coat|base\s*coat|1st\s*coat|first\s*coat)\b\s*[:\-]?\s*/i,'하도 '],[/^(?:\d+\s*[).]\s*)?(?:intermediate(?:\s*coat)?|mid(?:dle)?\s*coat|2nd\s*coat|second\s*coat|build\s*coat)\b\s*[:\-]?\s*/i,'중도 '],[/^(?:\d+\s*[).]\s*)?(?:top\s*coat|topcoat|finish(?:ing)?\s*coat|final\s*coat|3rd\s*coat|finish)\b\s*[:\-]?\s*/i,'상도 '],[/^(?:\d+\s*[).]\s*)?(?:sealer|seal\s*coat)\b\s*[:\-]?\s*/i,'실러 ']];
+ syParseSpec=function(raw,fname){
+  const R0=(raw||[]).map(x=>String(x==null?'':x));
+  let F=R0.map(fixLine);
+  const hasHdr=F.some(l=>/(제품명|도료명|품\s*명)/.test(l)&&/(도막\s*두께|구분|㎛)/.test(l));
+  F=F.map(l=>{
+   let t=l;for(const [re,r] of EN){if(re.test(t)){t=t.replace(re,r);break}}
+   t=t.replace(/^(?:\d+\s*[).]\s*|[①-⑩]\s*|[가-하]\s*[.)]\s*)?(하도실러|중도실러|상도실러|하\s*도|중\s*도|상\s*도)\s*[:：]\s*/,(m,a)=>a.replace(/\s+/g,'')+' ');
+   t=t.replace(SG_START,'$1 ').replace(/(?<=[가-힣A-Za-z)])(?=\d+(?:\.\d+)?\s*(?:㎛|㎜|mm))/,' ');
+   if(/^(?:하도실러|중도실러|상도실러|하도|중도|상도|실러)\s/.test(t)){
+    t=t.replace(/(\d+(?:\.\d+)?)\s*(?:mm|㎜)(?![A-Za-z])/g,(m,v)=>+v<10?Math.round(+v*1000)+'㎛':m);
+    if(hasHdr&&!/(㎛|μm|㎜|mm)/.test(t)){const m=t.match(/^(.*?\s)(\d{2,4})(?:\s+(\d{1,2})\s*회?)?\s*$/);if(m&&+m[2]>=10&&!/^\d/.test(m[1].trim()))t=m[1]+m[2]+'㎛'+(m[3]?' '+m[3]+'회':'')}}
+   return t});
+  let r;try{r=S0(F,fname)}catch(e){r=null}
+  if(!r||!r.length){try{r=S0(R0,fname)||[]}catch(e){r=[]}}
+  try{
+   const fr=spFree(F,fname);
+   if(!r||!r.length){if(fr)r=[fr]}
+   else if(fr){
+    /* 이름이 비었거나 두께가 빠진 코트는 보조 해석 결과로 채움 */
+    r.forEach(sys=>{(sys.items||[]).forEach(it=>{
+     if(!(it.n||'').trim()){const g=fr.items.find(x=>x.lb===it.lb&&Math.abs((+x.dft||0)-(+it.dft||0))<1)||fr.items.find(x=>x.lb===it.lb);if(g)it.n=g.n}
+    })});
+    /* 기존 해석이 놓친 단계가 있으면 보조 결과에서 추가 */
+    const sys=r[0];if(sys&&Array.isArray(sys.items)){
+     const have=new Set(sys.items.map(x=>String(x.lb||'').replace(/실러$/,'')));
+     const miss=fr.items.filter(x=>!have.has(String(x.lb).replace(/실러$/,''))&&r.length===1);
+     if(miss.length&&sys.items.length<fr.items.length){const rk=x=>['하도','중도','상도'].indexOf(String(x.lb).replace(/실러$/,''));sys.items=sys.items.concat(miss).sort((a,b)=>(rk(a)<0?9:rk(a))-(rk(b)<0?9:rk(b)))}
+    }
+   }
+  }catch(e){console.warn('spx518',e)}
+  return r||[]};
+}
+})();
+
+</script>
 </body></html>
