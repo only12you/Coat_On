@@ -3112,7 +3112,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v530',d:'2026.10.30'};
+const APPV={v:'v531',d:'2026.10.30'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -13376,5 +13376,11 @@ document.addEventListener('click',()=>setTimeout(sched,120),true);
 #hq .hqy .yb .yh b,#hq .hqy .yd2 .yh b{font-size:max(10px,calc(var(--k)*20))}
 #hq .hqy .yb .yh a,#hq .hqy .yd2 .yh a,#hq .hqy .ye .yh a{font-size:max(8px,calc(var(--k)*14))}
 #hq .hqy .yle>div span{white-space:nowrap;font-size:max(9px,calc(var(--k)*17))}
+</style>
+<style id="hqw531">/* v531 공동주택 대시보드 좌우 확대 — 좌우 여백 축소 · 넓은 화면은 최대 1000px까지 */
+html body #hq .ap-in{max-width:min(100vw,1000px)!important}
+html body #hq .apm{padding-left:calc(var(--v)*12)!important;padding-right:calc(var(--v)*12)!important}
+#hq .hqy{padding-left:calc(var(--k)*6)!important;padding-right:calc(var(--k)*6)!important}
+@media (min-width:760px){html body #hq .apm{padding-left:14px!important;padding-right:14px!important}#hq .hqy{padding-left:4px!important;padding-right:4px!important}}
 </style>
 </body></html>
