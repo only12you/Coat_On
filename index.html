@@ -3112,7 +3112,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v525',d:'2026.10.30'};
+const APPV={v:'v527',d:'2026.10.30'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -4249,12 +4249,11 @@ function dashRender0(){
  const tile=(cls,ic,t,s,f)=>`<button class="cd-tl ${cls}" ${go(f)}><span class="cd-ti">${IC[ic]}</span><b>${t}</b><small>${s}</small><span class="cd-ta">${IC.arr}</span></button>`;
  let h=`<div class="cdw">`;
  h+=`<div class="cd-tiles">${tile('t1','calc','일위대가표','PQC','T(0)')}${tile('t2','shield','도장시스템','Paint System','T(3)')}${tile('t3','house','공동주택<br>재도장공사','Repainting','hqOpen()')}${tile('t4','cycle','LCC<br>생애주기','Life Cycle','T(9)')}${tile('t5','chip','AI진단','Inspection','cdDiag()')}</div>`;
- h+=`<div class="cd-g2"><div class="cd-cd cd-wk"><div class="cd-h"><span class="cd-hi">${IC.doc}</span><b>최근 작업 현황</b><a ${go('cdAll()')}>전체보기 ${IC.arr}</a></div><div class="cd-st"><div><small>진행중</small><b>${wRun}<em>건</em></b><i style="--w:${wRun/wMax*100}%;--c:#2d7df6"></i></div><div><small>완료</small><b>${wDone}<em>건</em></b><i style="--w:${wDone/wMax*100}%;--c:#1fb5a0"></i></div><div><small>보류</small><b>${wHold}<em>건</em></b><i style="--w:${wHold/wMax*100}%;--c:#f2a13a"></i></div></div></div>`;
+ h+=`<div class="cd-g2"><div class="cd-cd cd-wk"><div class="cd-h"><span class="cd-hi">${IC.doc}</span><b>최근 작업 현황</b>${SM?'<em class="cd-ex">예시</em>':''}<a ${go('cdAll()')}>전체보기 ${IC.arr}</a></div><div class="cd-st"><div><small>진행중</small><b>${wRun}<em>건</em></b><i style="--w:${wRun/wMax*100}%;--c:#2d7df6"></i></div><div><small>완료</small><b>${wDone}<em>건</em></b><i style="--w:${wDone/wMax*100}%;--c:#1fb5a0"></i></div><div><small>보류</small><b>${wHold}<em>건</em></b><i style="--w:${wHold/wMax*100}%;--c:#f2a13a"></i></div></div></div>`;
  h+=`<div class="cd-cd cd-mo"><div class="cd-h"><span class="cd-hi fill">${IC.calc}</span><b>이번 달 총 산출량</b></div><div class="cd-dt">${IC.cal}<span>${cur.replace('-','.')}</span></div><div class="cd-big">${Fm(aC)}<em>㎡</em></div><div class="cd-df">${dl(dMo)}<small>(전월 대비)</small></div></div></div>`;
  h+=`<div class="cd-g3"><div class="cd-cd cd-s"><span class="cd-si">${IC.coins}</span><div><small>예상 견적 금액</small><b>${q0?'₩ '+Fm(q0):'₩ 0'}</b>${dl(dQ,Q.length?'최근 견적서 기준':'견적서 발송 시 표시')}</div></div><div class="cd-cd cd-s"><span class="cd-si">${IC.doc}</span><div><small>등록된 제품 수</small><b>${Fm(nP)}<em>개</em></b>${pD}</div></div><div class="cd-cd cd-s"><span class="cd-si">${IC.bld}</span><div><small>등록된 현장 수</small><b>${Fm(nS)}<em>개</em></b>${sD}</div></div></div>`;
  h+=`<div class="cd-g2 cd-g2b"><div class="cd-cd cd-rc"><div class="cd-h"><span class="cd-hi fill2">${IC.bars}</span><b>최근 산출 내역</b><a ${go('cdAll()')}>전체보기 ${IC.arr}</a></div>${recent.length?recent.map(x=>`<div class="cd-rw"><span class="cd-ch ${cc(x.t)}">${esc(x.t)}</span><span class="cd-rn">${esc(x.n)}</span><span class="cd-rd">${esc(x.d)}</span><span class="cd-rv">${IC.chev}</span></div>`).join(''):'<div class="cd-none">아직 작업 내역이 없습니다</div>'}</div>`;
  h+=`<div class="cd-cd cd-pr"><div class="cd-h"><span class="cd-hi fill2">${IC.pie}</span><b>제품별 사용 비중</b></div><div class="cd-dw">${donut}</div><div class="cd-lg">${legend||'<div class="cd-none" style="grid-column:1/-1">사용 기록이 쌓이면 표시됩니다</div>'}</div></div></div>`;
- if(SM)h+='<div class="cd-sm">※ 예시 화면입니다 · 견적서 발송·작업 기록이 쌓이면 실제 값으로 바뀝니다</div>';
  h+=`<div class="cd-bn"><svg class="cd-rl" viewBox="0 0 120 80" fill="none"><rect x="14" y="14" width="64" height="24" rx="10" transform="rotate(-24 46 26)" fill="#7fd0ff"/><path d="M74 14l16 8-4 10-22-8" stroke="#cfeeff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 30l-14 28" stroke="#cfeeff" stroke-width="5" stroke-linecap="round"/><rect x="48" y="56" width="12" height="20" rx="5" fill="#eaf6ff"/></svg><div class="cd-bt"><b>더 정확한 계산, 더 나은 결과</b><small>COAT ON이 도장산업의 가치를 높입니다.</small></div><button ${go('cdGuide()')}>이용 가이드 ${IC.arr}</button></div></div>`;
  if(IS_ADMIN)h=h.replace(/<\/div>$/,'<button class="dsa" onclick="T(7)">'+PQI.admin+'<span><b>관리자 모드</b><small>배포용 데이터 관리 · 이용조건 확인 · 내보내기</small></span>'+PQI.chev+'</button></div>');
  e.innerHTML=h;
@@ -4273,6 +4272,15 @@ function cdGuide(){try{(window.ugOpen||helpOpen)()}catch(_){}}
 function cdDiag(){T(9);setTimeout(()=>{const b=[...document.querySelectorAll('button,[role=tab],.tab,a')].find(x=>x.offsetParent&&/^\s*(③\s*)?(AI\s*)?(현장\s*)?진단\s*$/.test(x.textContent));if(b)b.click()},350)}
 
 function pqQuote(){if(typeof est=='function')est()}
+
+
+/* 소요량 공식 · 경고 · 용어 매칭표 (홈 하단 안내 → 더보기로 이동) */
+function infoOpen(){
+ const d=document.getElementById('hinfo');if(!d)return;
+ const c=d.cloneNode(true);c.querySelectorAll('summary').forEach(x=>x.remove());c.removeAttribute('id');c.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+ let g='';try{g=glossHTML()}catch(_){}
+ pqSheet('pqinfo','<div class="pqmh"><b>소요량 공식 · 경고 · 용어 매칭표</b></div><div class="pqif">'+c.innerHTML.replace(/<div class="?hgl"?><\/div>/,'')+'<div class="pqig">'+g+'</div></div><button class="pqbc" onclick="pqX(\'pqinfo\')">닫기</button>');
+}
 
 /* 더보기 · 자료 이용 안내 */
 function moreOpen(){
@@ -8777,10 +8785,11 @@ window.moreOpen=function(){
  const G={blue:'linear-gradient(145deg,#5aa0ff,#2f6bd0)',green:'linear-gradient(145deg,#6cbf86,#3d9068)',orange:'linear-gradient(145deg,#f5a742,#e0771c)',teal:'linear-gradient(145deg,#5fb6c9,#2f8ea5)',purple:'linear-gradient(145deg,#a479ee,#7549d0)',indigo:'linear-gradient(145deg,#4d78e6,#2a4fc0)',red:'linear-gradient(145deg,#ee6a6a,#cf3a3a)',sky:'linear-gradient(145deg,#4a9bff,#2a6fe0)',slate:'linear-gradient(145deg,#7686a3,#4f5d7a)'};
  const R1=[['db','제품 DB','T(1)','제품 정보 · TDS 관리','blue'],['hq','단지 DB','aptDbMgr()','면적 · 기본정보 등록','sky'],['save','백업 · 복원',"goCsv('set')",'CSV · JSON 백업','green'],['calc','노무비 설정','lbSheet()','노임단가 · 할증','orange']];
  const R2=[['fm','충진','T(8)','실란트 · 실리콘 퍼티','teal'],['ap','도면','apOpen()','도장 위치 · 면적 관리','purple'],['hq','공동','hqOpen()','공동주택 견적','indigo'],['cmp','제품 비교','T(10)','소요량 · 자재비 우위','orange']];
+ const R4=[['calc','소요량 공식 · 경고','infoOpen()','산출 공식 · 용어 매칭표','orange']];
  const R3=[['quote','사용법','helpOpen()','매뉴얼 · 도움말','red'],['set','설정 · 언어','openSettings()','테마 · 언어 · 알림','sky'],['shield','자료 이용 안내','legalOpen()','이용약관 · 개인정보','green'],['info','정보','showInfo()','앱 정보 · 버전','slate']];
  const card=([i,t,f,d,c])=>`<button class="mxc" onclick="pqX('pqmore');${f}"><span class="mxi" style="background:${G[c]}">${PQI[i]||''}</span><b class="mxn">${t}</b>${CH}<span class="mxd">${d}</span></button>`;
  const row=(L,k)=>`<div class="mxr mxr${k}">${L.map(card).join('')}</div>`;
- let h=`<div class="mxh"><div class="mxt"><span class="mxg"><i></i><i></i><i></i><i></i></span>더보기</div><div class="mxs"><span><b>정확한 데이터,</b> 스마트한 계산</span><u></u></div></div>`+row(R1,4)+row(R2,4)+row(R3,4);
+ let h=`<div class="mxh"><div class="mxt"><span class="mxg"><i></i><i></i><i></i><i></i></span>더보기</div><div class="mxs"><span><b>정확한 데이터,</b> 스마트한 계산</span><u></u></div></div>`+row(R1,4)+row(R2,4)+row(R3,4)+row(R4,4);
  if(typeof IS_ADMIN!='undefined'&&IS_ADMIN)h+=`<button class="mxw" onclick="pqX('pqmore');T(7)"><span class="mxi" style="background:${G.slate};width:38px;height:38px;margin:0;border-radius:10px">${PQI.admin||''}</span><b>관리자 모드</b></button>`;
  h+=`<div class="mxb"><span class="mxbi"><i style="height:35%"></i><i style="height:55%"></i><i style="height:80%"></i></span><div class="mxbt"><small>더 스마트한 도장 계산의 시작</small><b>지금 바로 시작해보세요!</b></div><button class="mxgo" onclick="pqX('pqmore');T(0)">시작하기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div><button class="mxcl" onclick="pqX('pqmore')">닫기</button>`;
  pqSheet('pqmore',h,'mx');
@@ -13128,4 +13137,108 @@ html body #hq header.aph .axs{top:calc(var(--v)*70 + env(safe-area-inset-top))!i
 .hqz-note{font-size:max(9px,calc(var(--v)*17));color:#7a88a3;text-align:center}
 @media(max-width:400px){.hqz-r{grid-template-columns:1fr}.hqz-l .dt{display:none}.hqz-l .pg{width:calc(var(--v)*150)}}
 </style>
+<style id="fit526">
+/* v526: 첫 대시보드(홈) 상하 간격을 한 화면에 맞춤 — --vf(세로 배율)를 스크립트가 기기 높이에 맞춰 계산 */
+html body #vh.cd{--kv:calc(var(--k)*var(--vf,1));min-height:0!important}
+html body #vh.cd .cdh{min-height:calc(var(--kv)*312);padding-top:calc(env(safe-area-inset-top,0px) + var(--kv)*22);padding-bottom:calc(var(--kv)*40)}
+html body #vh.cd .cdh:after{bottom:calc(var(--kv)*-34);height:calc(var(--kv)*64)}
+html body #vh.cd .cdh-sb{margin-top:calc(var(--kv)*7)}
+html body #vh.cd .cdh-ic{margin-top:calc(var(--kv)*8)}
+html body #vh.cd .cdh-hi{margin-top:calc(var(--kv)*40)}
+html body #vh.cd .cdh-sl{top:calc(var(--kv)*122)}
+html body #vh.cd .cdw{margin-top:calc(var(--kv)*-6);gap:calc(var(--kv)*12)}
+html body #vh.cd .cd-tiles{padding:calc(var(--kv)*17) calc(var(--k)*17)}
+html body #vh.cd .cd-tl{min-height:calc(var(--kv)*228);padding-top:calc(var(--kv)*24);padding-bottom:calc(var(--k)*46)}
+html body #vh.cd .cd-tl b{margin-top:calc(var(--kv)*14)}
+html body #vh.cd .cd-tl small{margin-top:calc(var(--kv)*6)}
+html body #vh.cd .cd-ta{bottom:calc(var(--k)*13)}
+html body #vh.cd .cd-g2,html body #vh.cd .cd-g3{gap:calc(var(--kv)*12) calc(var(--k)*12)}
+html body #vh.cd .cd-cd{padding:calc(var(--kv)*20) calc(var(--k)*20)}
+html body #vh.cd .cd-st{margin-top:calc(var(--kv)*16);padding:calc(var(--kv)*14) 0}
+html body #vh.cd .cd-st i{margin-top:calc(var(--kv)*8)}
+html body #vh.cd .cd-dt{margin-top:calc(var(--kv)*10)}
+html body #vh.cd .cd-big{margin-top:calc(var(--kv)*14)}
+html body #vh.cd .cd-df{margin-top:calc(var(--kv)*14)}
+html body #vh.cd .cd-s{padding:calc(var(--kv)*18) calc(var(--k)*14)}
+html body #vh.cd .cd-s b{margin:calc(var(--kv)*5) 0 calc(var(--kv)*4)}
+html body #vh.cd .cd-rw{padding:calc(var(--kv)*12) 0}
+html body #vh.cd .cd-rc>.cd-h{margin-bottom:calc(var(--kv)*8)}
+html body #vh.cd .cd-ch{padding:calc(var(--kv)*8) calc(var(--k)*8)}
+html body #vh.cd .cd-dw{width:min(100%,max(calc(var(--k)*176),calc(var(--k)*190*var(--vf,1))));margin:calc(var(--kv)*8) auto calc(var(--kv)*12);container-type:inline-size}
+html body #vh.cd .cd-dc b{font-size:max(7.5px,10.5cqw)}
+html body #vh.cd .cd-dc small{font-size:max(6.5px,7.6cqw)}
+html body #vh.cd .cd-lg{gap:calc(var(--kv)*8) calc(var(--k)*10)}
+html body #vh.cd .cd-bn{padding:calc(var(--kv)*16) calc(var(--k)*18)}
+html body #vh.cd .cd-rl{width:calc(var(--k)*96*var(--vf,1))!important}
+html body #vh.cd .cd-sm{margin:calc(var(--kv)*-2) 0}
+html body #vh.cd details.hi{margin:max(8px,calc(var(--kv)*14)) calc(var(--k)*14) 0}
+@media(max-width:350px){html body #vh.cd .cd-s b{font-size:max(10.5px,calc(var(--k)*23));letter-spacing:-.05em}html body #vh.cd .cd-s b em{font-size:9px}}
+/* 남는 높이는 구역 사이 간격으로 고르게 나눔 */
+html body #vh.cd{display:flex;flex-direction:column}
+html body #vh.cd .hpn{flex:1 1 auto!important;display:flex!important;flex-direction:column}
+html body #vh.cd #dash,html body #vh.cd #dash .dsh{flex:1 1 auto;display:flex;flex-direction:column}
+html body #vh.cd .cdw{flex:1 1 auto;justify-content:space-between}
+html body #vh.cd.cdc details.hi{display:none}
+
+html body #vh.cd .cd-ex{font-style:normal;margin-left:6px;padding:1px 7px;border-radius:99px;background:#eef2f9;color:#7a869c;font-size:max(8px,calc(var(--k)*14));font-weight:600;align-self:center}
+/* v527 홈 하단 안내(소요량 공식·경고) 제거 → 더보기 안으로 이동 */
+html body #vh #hinfo,html body #vh.cd details.hi{display:none!important}
+.pqif{max-height:62vh;overflow:auto;font-size:13px;line-height:1.55;padding:2px 4px 10px;color:#14233f}
+.pqif>b{display:block;margin:4px 0 6px;font-size:14px;color:#0b2a66}
+.pqif .hr{margin-top:8px;font-weight:700;color:#0b2a66}
+.pqif .hf{background:#eef4ff;border:1px solid #c5d6f2;border-radius:8px;padding:6px 10px;margin:3px 0;font-weight:700}
+.pqif .hn{display:block;margin-top:8px;color:#5a6a85}
+.pqif .hw{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff4e5;border:1px solid #f3d3a2;color:#7a4a00}
+.pqif .pqig{margin-top:12px}
+</style>
+<script id="fit526">
+/* v526: 첫 대시보드 한 화면 맞춤 — 기기 높이에 맞는 세로 배율(--vf) 계산 */
+(function(){
+'use strict';
+let busy=0,raf=0;
+function avail(vh){
+ const nav=document.getElementById('gnav');let navTop=innerHeight;
+ if(nav){const r=nav.getBoundingClientRect();if(r.height>0&&r.top>0)navTop=Math.min(navTop,r.top)}
+ return navTop;
+}
+function bottomOf(vh){
+ let b=0;[...vh.children].forEach(c=>{const cs=getComputedStyle(c);if(cs.display==='none'||cs.position==='fixed'||cs.position==='absolute')return;const r=c.getBoundingClientRect();if(r.height>0)b=Math.max(b,r.bottom)});
+ return b;
+}
+function fit(){
+ const vh=document.getElementById('vh');
+ if(!vh||vh.hidden||!vh.classList.contains('cd')||vh.offsetParent===null&&getComputedStyle(vh).position!=='fixed')return;
+ if(busy)return;busy=1;
+ try{
+  const top=vh.getBoundingClientRect().top+scrollY;
+  vh.classList.remove('cdc');
+  const target=avail(vh)-6;                 // 하단 메뉴 바로 위까지
+  const imp=(p,v)=>vh.style.setProperty(p,v,'important');
+  const need=f=>{vh.style.setProperty('--vf',String(f));imp('padding-bottom','0px');imp('min-height','0px');return bottomOf(vh)<=target};
+  /* 자연 높이(배율 1)에서 시작 → 넘치면 줄이고, 남으면 늘림 */
+  let lo=.42,hi=2.6,best=lo;
+  let ok=need(lo);
+  if(!ok){vh.classList.add('cdc');ok=need(lo)}   // 아주 낮은 화면: 접이식 안내를 숨기고 다시 시도
+  if(ok){for(let i=0;i<9;i++){const m=(lo+hi)/2;if(need(m)){best=m;lo=m}else hi=m}}
+  vh.style.setProperty('--vf',best.toFixed(3));
+  if(ok){imp('min-height',Math.max(0,avail(vh))+'px');imp('padding-bottom','0px')}   // 한 화면에 맞음
+  else{vh.style.removeProperty('padding-bottom');vh.style.removeProperty('min-height')}  // 맞지 않으면 스크롤 허용
+  vh.dataset.fit=best.toFixed(2)+(ok?'':'!');
+ }catch(e){console.warn('fit526',e)}
+ busy=0;
+}
+function sched(){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>requestAnimationFrame(fit))}
+window.cdFit=sched;
+addEventListener('resize',sched);addEventListener('orientationchange',()=>setTimeout(sched,200));
+if(window.visualViewport)visualViewport.addEventListener('resize',sched);
+addEventListener('load',()=>{sched();setTimeout(sched,600);setTimeout(sched,1800)});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(sched);
+/* 홈이 표시되거나 내용이 다시 그려질 때 */
+const obs=new MutationObserver(()=>sched());
+function watch(){const vh=document.getElementById('vh');if(!vh)return false;obs.observe(vh,{attributes:true,attributeFilter:['hidden','class'],childList:true,subtree:true,characterData:true});return true}
+if(!watch())document.addEventListener('DOMContentLoaded',watch);
+document.addEventListener('click',()=>setTimeout(sched,120),true);
+})();
+
+</script>
 </body></html>
