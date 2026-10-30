@@ -103,6 +103,7 @@ function extract(raw, fname) {
   const t = String(raw || '').replace(/\r/g, '').replace(/[ \t\u00a0]+/g, ' '); const o = {};
   const L = t.split('\n').map((x) => x.trim()).filter(Boolean); let m;
   if ((m = t.match(/(?:제품\s*명|품\s*명|Product\s*Name)\s*[:：]?\s*([^\n]{2,60})/i))) o.name = m[1].trim();
+  else if (fname && fname.replace(/\.[^.]+$/, '').trim().length >= 2) o.name = fname.replace(/\.[^.]+$/, '').trim();
   else { const c = L.find((x) => x.length >= 3 && x.length <= 50 && !/^(page|\d|www|tel|http)/i.test(x)); if (c) o.name = c; }
   { const v = near(t, /용적\s*고형분|체적\s*고형분|용적\s*비\s*고형분|고형분|solids?\s*by\s*volume|volume\s*solids|\bSVR\b|\bVS\b/, 20, 100, 45, /중량|무게|weight|wt|mass/i); if (v) o.svr = v; }
   { const v = near(t, /건조\s*도막(?:\s*두께)?|표준\s*도막(?:\s*두께)?|권장\s*도막|도막\s*두께|\bDFT\b|dry\s*film(?:\s*thickness)?/, 10, 2000, 40); if (v) o.dft = v; }
@@ -689,20 +690,40 @@ async function pdfOcr(f) {
   for (let i = 1; i <= Math.min(3, pdf.numPages); i++) { const pg = await pdf.getPage(i), vp = pg.getViewport({ scale: 2 }); const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise; const tx = (await T.recognize(cv, 'kor+eng')).data.text + '\n'; out += tx; PARTS.push({ l: i + '쪽', t: tx }); }
   return out;
 }
+const CMAP = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/';
+/* 파일 앞부분(매직 바이트)으로 종류 판별 — 확장자가 없거나 틀려도 읽도록 */
+async function sniff(f) {
+  const u = new Uint8Array(await f.slice(0, 16).arrayBuffer()), at = (a) => a.every((v, i) => u[i] === v);
+  if (at([0x25, 0x50, 0x44, 0x46])) return 'pdf';
+  if (at([0x50, 0x4b, 0x03, 0x04])) return 'zip';
+  if (at([0xd0, 0xcf, 0x11, 0xe0])) return 'ole';
+  if (at([0x89, 0x50, 0x4e, 0x47]) || at([0xff, 0xd8, 0xff]) || at([0x47, 0x49, 0x46]) || (at([0x52, 0x49, 0x46, 0x46]) && u[8] === 0x57)) return 'img';
+  return '';
+}
+const garbled = (t) => { const x = t.replace(/\s/g, ''); if (x.length < 50) return true; const ok = (x.match(/[가-힣A-Za-z0-9.,:;()%/\-~㎡㎛℃°·]/g) || []).length; return ok / x.length < 0.55; };
 async function fileText(f) {
-  const ext = (f.name.split('.').pop() || '').toLowerCase();
-  if (['txt', 'csv', 'tsv', 'md'].includes(ext)) return await f.text();
-  if (['xlsx', 'xls', 'xlsm'].includes(ext)) { const X = await lib('xlsx'); const wb = X.read(await f.arrayBuffer(), { type: 'array' }); PARTS = wb.SheetNames.map((s) => ({ l: '시트 ' + s, t: X.utils.sheet_to_csv(wb.Sheets[s], { FS: ' ' }) })); return PARTS.map((x) => x.t).join('\n'); }
-  if (ext === 'pdf') {
-    const P = await lib('pdf'); const pdf = await P.getDocument({ data: await f.arrayBuffer() }).promise; let out = ''; PARTS = [];
-    for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) { const c = await (await pdf.getPage(i)).getTextContent(); let y = null, line = '', pt = ''; c.items.forEach((it) => { const yy = Math.round(it.transform[5]); if (y !== null && Math.abs(yy - y) > 2) { pt += line.trim() + '\n'; line = ''; } y = yy; line += it.str + ' '; }); pt += line + '\n'; out += pt; PARTS.push({ l: i + '쪽', t: pt }); }
-    if (out.replace(/\s/g, '').length < 50) { busy('글자가 없는 PDF입니다 · 이미지 인식 중…'); return await pdfOcr(f); }
+  const ext = (f.name.split('.').pop() || '').toLowerCase(); let kind = await sniff(f);
+  if (!kind) { if (['txt', 'csv', 'tsv', 'md'].includes(ext)) kind = 'text'; else if ((f.type || '').startsWith('image/')) kind = 'img'; else if (ext === 'pdf') kind = 'pdf'; }
+  if (kind === 'ole' && ['xls'].includes(ext)) kind = 'sheet';
+  if (kind === 'zip') kind = ['xlsx', 'xlsm', 'xls'].includes(ext) ? 'sheet' : ['docx', 'pptx'].includes(ext) ? 'office' : (await unzipNames(f)).kind;
+  if (kind === 'text') return await f.text();
+  if (kind === 'sheet') { const X = await lib('xlsx'); const wb = X.read(await f.arrayBuffer(), { type: 'array' }); PARTS = wb.SheetNames.map((s) => ({ l: '시트 ' + s, t: X.utils.sheet_to_csv(wb.Sheets[s], { FS: ' ' }) })); return PARTS.map((x) => x.t).join('\n'); }
+  if (kind === 'pdf') {
+    const P = await lib('pdf'); let pdf;
+    try { pdf = await P.getDocument({ data: await f.arrayBuffer(), cMapUrl: CMAP, cMapPacked: true, useSystemFonts: true }).promise; }
+    catch (e) { if (e && (e.name === 'PasswordException' || /password/i.test(e.message || ''))) throw new Error('password'); throw e; }
+    let out = ''; PARTS = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 40); i++) {
+      try { const c = await (await pdf.getPage(i)).getTextContent(); let y = null, line = '', pt = ''; c.items.forEach((it) => { const yy = Math.round(it.transform[5]); if (y !== null && Math.abs(yy - y) > 2) { pt += line.trim() + '\n'; line = ''; } y = yy; line += it.str + ' '; }); pt += line + '\n'; out += pt; PARTS.push({ l: i + '쪽', t: pt }); } catch (e) { console.warn('pdf page', i, e); }
+    }
+    if (garbled(out)) { busy('글자를 바로 읽지 못해 이미지 인식(OCR)으로 읽는 중…'); PARTS = []; return await pdfOcr(f); }
     return out;
   }
-  if (ext === 'docx' || ext === 'pptx') { const z = await unzip(await f.arrayBuffer()); PARTS = Object.keys(z).sort((a, b) => (parseInt((a.match(/\d+/) || [0])[0], 10) - parseInt((b.match(/\d+/) || [0])[0], 10)) || (a < b ? -1 : 1)).map((k) => ({ l: /slide(\d+)/.test(k) ? '슬라이드 ' + k.match(/slide(\d+)/)[1] : '본문', t: xmlText(z[k]) })); return PARTS.map((x) => x.t).join('\n'); }
-  if ((f.type || '').startsWith('image/')) { const T = await lib('tess'); return (await T.recognize(f, 'kor+eng')).data.text; }
-  throw new Error('unsupported');
+  if (kind === 'office') { const z = await unzip(await f.arrayBuffer()); PARTS = Object.keys(z).sort((a, b) => (parseInt((a.match(/\d+/) || [0])[0], 10) - parseInt((b.match(/\d+/) || [0])[0], 10)) || (a < b ? -1 : 1)).map((k) => ({ l: /slide(\d+)/.test(k) ? '슬라이드 ' + k.match(/slide(\d+)/)[1] : '본문', t: xmlText(z[k]) })); return PARTS.map((x) => x.t).join('\n'); }
+  if (kind === 'img') { const T = await lib('tess'); return (await T.recognize(f, 'kor+eng')).data.text; }
+  throw new Error(['doc', 'ppt', 'hwp', 'hwpx', 'ole'].includes(kind === 'ole' ? 'ole' : ext) ? 'oldfmt' : 'unsupported');
 }
+async function unzipNames(f) { const u = new Uint8Array(await f.arrayBuffer()), s = new TextDecoder('latin1').decode(u.subarray(0, Math.min(u.length, 4000000))); return { kind: /word\/document\.xml/.test(s) || /ppt\/slides\//.test(s) ? 'office' : /xl\/workbook\.xml/.test(s) ? 'sheet' : 'zip' }; }
 
 /* ---------- 앱 ---------- */
 const KEY = 'cmp_v495';
@@ -807,7 +828,7 @@ async function attach(i, f, mode) {
     else { const o = extract(txt, f.name); const dbk = [];
       if (D) { const put = (k, v) => { if (v != null && v !== '' && !(typeof v === 'number' && !(v > 0))) { o[k] = String(typeof v === 'number' ? +v.toFixed(3) : v); dbk.push(k); } };
         put('name', D.n); put('company', D.mf); put('usage', D.us || D.g); put('desc', D.d); put('svr', D.svr); put('dft', D.dft); put('pack', D.packL); put('dry', D.dry); put('pot', D.pot); } const keys = Object.keys(o); const p = S.ps[i]; Object.assign(p, o); p.ext = keys; p.src = srcPages(o, keys); dbk.forEach((k) => { p.src[k] = '제품 DB 방식 인식'; }); p.psrc = {}; lst(o.perf).forEach((ln) => { const q = PARTS.find((x) => nrm(x.t).includes(ln)); if (q && q.l) p.psrc[ln] = q.l; }); p.rawLen = txt.replace(/\s/g, '').length; p.file = { name: f.name, url: img ? URL.createObjectURL(f) : '' }; toast(keys.length ? keys.length + '개 항목을 ' + (D ? '제품 DB와 같은 방식으로 인식했습니다' : '추출해 자동 비교했습니다') : '자동 추출된 값이 없습니다 · 추출값 확인에서 직접 입력하세요'); }
-  } catch (e) { toast(e.message === 'unsupported' ? '지원하지 않는 형식입니다' : '분석하지 못했습니다 · 네트워크를 확인하거나 직접 입력하세요'); }
+  } catch (e) { console.error(e); const m = e && e.message || ''; toast(m === 'unsupported' ? '지원하지 않는 형식입니다 · PDF, 엑셀, 워드, 파워포인트, 이미지, 텍스트 파일을 올려주세요' : m === 'oldfmt' ? '옛 형식 파일(doc·ppt·hwp)은 읽을 수 없습니다 · PDF로 저장해서 올려주세요' : m === 'password' ? '암호가 걸린 PDF입니다 · 암호를 푼 파일을 올려주세요' : m === 'lib' ? '분석 도구를 불러오지 못했습니다 · 인터넷 연결을 확인해 주세요' : '분석하지 못했습니다 (' + (m || e.name || '알 수 없음').slice(0, 50) + ') · 직접 입력하거나 PDF로 다시 저장해 올려주세요'); }
   busy(''); save(); S.keepY = true; render();
 }
 const nrm = (t) => String(t || '').replace(/\r/g, '').replace(/[ \t\u00a0]+/g, ' ');
