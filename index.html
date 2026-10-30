@@ -3112,7 +3112,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v527',d:'2026.10.30'};
+const APPV={v:'v528',d:'2026.10.30'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -13135,7 +13135,8 @@ html body #hq header.aph .axs{top:calc(var(--v)*70 + env(safe-area-inset-top))!i
 .hqz-bn button{position:relative;z-index:1;flex:none;border:0!important;background:#fff!important;color:#1a5fd6!important;border-radius:99px!important;padding:calc(var(--v)*14) calc(var(--v)*26)!important;font-size:max(10px,calc(var(--v)*20))!important;font-weight:700;width:auto!important;height:auto!important;white-space:nowrap!important;display:flex;align-items:center;gap:4px;cursor:pointer}.hqz-bn button svg{width:1em;height:1em}
 .hqz-bn .bg{position:absolute;right:0;top:0;bottom:0;width:calc(var(--v)*260);background-size:cover;background-position:60% 40%;opacity:.55;-webkit-mask-image:linear-gradient(90deg,transparent,#000 70%);mask-image:linear-gradient(90deg,transparent,#000 70%)}
 .hqz-note{font-size:max(9px,calc(var(--v)*17));color:#7a88a3;text-align:center}
-@media(max-width:400px){.hqz-r{grid-template-columns:1fr}.hqz-l .dt{display:none}.hqz-l .pg{width:calc(var(--v)*150)}}
+@media(max-width:560px){.hqz-r{grid-template-columns:1fr 1fr;gap:10px}.hqz-r>.hqz-p{padding:14px 12px}.hqz-pg{flex-direction:column;align-items:stretch;gap:8px}.hqz-pg .dn{align-self:center;width:min(100%,128px);height:auto;aspect-ratio:1}.hqz-pg .lg div{padding:5px 0;gap:6px}.hqz-m{gap:7px}.hqz-m button{min-height:76px!important;padding:10px 2px 8px!important;gap:5px}.hqz-m button svg{width:30px;height:30px}.hqz-m button b{font-size:10.5px;letter-spacing:-.06em}.hqz-r .hqz-h b{font-size:13px}.hqz-r .hqz-h a{display:none}}
+@media(max-width:400px){.hqz-l .dt{display:none}.hqz-l .pg{width:calc(var(--v)*150)}}
 </style>
 <style id="fit526">
 /* v526: 첫 대시보드(홈) 상하 간격을 한 화면에 맞춤 — --vf(세로 배율)를 스크립트가 기기 높이에 맞춰 계산 */
