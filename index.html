@@ -7520,6 +7520,7 @@ const SXH2="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUEBAQEAwUEB
 
 /* v525 공동주택 재도장공사 대시보드 */
 const HQZ_ST=['진행중','완료','대기','검토중','지연'];
+window.hqGo=w=>{if(w=='db'){try{aptDbOpen()}catch(_){}}else{const e=document.querySelector('#hq .apc');if(e){e.open=true;e.scrollIntoView({behavior:'smooth'})}}};
 window.hqzSt=id=>{const a=lget(),e=a.find(x=>x.id==id);if(!e)return;const i=HQZ_ST.indexOf(e.stt||'대기');e.stt=HQZ_ST[(i+1)%HQZ_ST.length];if(e.stt=='완료')e.pg=100;lset(a);rerender()};
 window.hqzPg=id=>{const a=lget(),e=a.find(x=>x.id==id);if(!e)return;const v=prompt('공정 진행률(%)을 입력하세요',e.pg==null?0:e.pg);if(v==null)return;const n=Math.max(0,Math.min(100,Math.round(+String(v).replace(/[^0-9.]/g,'')||0)));e.pg=n;if(n>=100)e.stt='완료';else if(e.stt=='완료'||!e.stt)e.stt='진행중';lset(a);rerender()};
 function hqDash(){try{return hqDash0()}catch(e){return ''}}
@@ -7532,43 +7533,39 @@ function hqDash0(){
  const REG=[['수도권','#1f64e0',/서울|인천|경기|수원|성남|고양|용인|부천|안산|안양|화성|평택|의정부|광명|파주|시흥|김포|하남|광교|송도|분당|일산|판교/],['경상권','#7b61e6',/부산|대구|울산|경북|경남|경상|포항|창원|구미|김해|진주|양산|거제|경주|해운대/],['전라권','#27a9e1',/광주|전북|전남|전라|전주|익산|군산|목포|여수|순천|광양|나주/],['충청권','#f5a623',/대전|세종|충북|충남|충청|청주|천안|아산|충주|제천|당진|서산|세종/],['강원권','#52c06a',/강원|춘천|원주|강릉|속초|동해|삼척|태백/],['제주권','#6b7f99',/제주|서귀포/]];
  const regOf=s=>{const t=String(s||'');for(const r of REG)if(r[2].test(t))return r[0];return''};
  const recs=(()=>{try{return lget().filter(x=>x&&x.id)}catch(_){return[]}})();
- const real=recs.length>0;
  const T0=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime(),D1=864e5;
  const mon=(()=>{const d=new Date(T0);const w=(d.getDay()+6)%7;return T0-w*D1})();
  const mS=new Date(now.getFullYear(),now.getMonth(),1).getTime();
- /* ---------- 값 계산 ---------- */
- let V;
- if(real){
-  const rows=recs.map(e=>{const S=e.state||{},addr=S.addr||(S.kapt&&S.kapt.addr)||'',hh=(S.types||[]).reduce((s,t)=>s+Nn(t.c),0);return{e,id:e.id,n:e.name||'무제',addr,reg:regOf(addr+' '+(e.name||'')),hh,tot:Nn(e.total),stt:HQZ_ST.includes(e.stt)?e.stt:'대기',ts:cts(e),S}});
-  const inM=r=>r.ts>=mS,sum=(a,f)=>a.reduce((s,r)=>s+f(r),0);
-  const prog=rows.filter(r=>r.stt=='진행중');
-  const rg=REG.map(r=>[r[0],r[1],rows.filter(x=>x.reg==r[0]).length]).sort((a,b)=>b[2]-a[2]);
-  const bins=[['24평 이하','#2d7df6',x=>x<60],['32평','#17b26a',x=>x>=60&&x<85],['45평','#8b5cf0',x=>x>=85&&x<115],['59평','#f5a623',x=>x>=115&&x<150],['84평 이상','#aab4c8',x=>x>=150]].map(b=>[b[0],b[1],rows.filter(r=>(r.S.types||[]).some(t=>Nn(t.a)>0&&b[2](Nn(t.a)))).length]);
-  const gr=[['외벽','#2d7df6',['out']],['옥상','#17b26a',['roof']],['주차장·바닥','#8b5cf0',['epx','pav']],['기타','#f5a623',['in','shg','cctv','gate','traf']]].map(g=>[g[0],g[1],rows.filter(r=>g[2].some(k=>r.S.inc&&r.S.inc[k])).length]);
-  const rec=rows.slice().sort((a,b)=>b.ts-a.ts);
-  const day=(f,t)=>rows.filter(r=>r.ts>=f&&r.ts<t);
-  const td=day(T0,T0+D1),yd=day(T0-D1,T0),wk=day(mon,mon+7*D1),lw=day(mon-7*D1,mon);
-  V={samp:false,date:now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 기준',
-   k:[['등록 아파트 수',rows.length,'개 단지',rows.filter(inM).length,'개'],['전체 세대 수',sum(rows,r=>r.hh),'세대',sum(rows.filter(inM),r=>r.hh),''],['총 견적 금액',sum(rows,r=>r.tot),'원',sum(rows.filter(inM),r=>r.tot),''],['진행 중 공사 단지',prog.length,'개 단지',prog.filter(inM).length,'개']],
-   rg,bins,gr,tot:rows.length,
-   list:rec.slice(0,4).map(r=>({id:r.id,n:r.n,sub:r.addr||(((r.S.blds||[]).length)?(r.S.blds||[]).length+'개 동':'주소 미입력'),st:r.stt,d:dstr(r.ts)})),
-   t:[['오늘 등록 단지',td.length,'개 단지',td.length-yd.length,'개','전일대비'],['오늘 등록 세대수',sum(td,r=>r.hh),'세대',sum(td,r=>r.hh)-sum(yd,r=>r.hh),'','전일대비'],['오늘 등록 견적 금액',sum(td,r=>r.tot),'원',sum(td,r=>r.tot)-sum(yd,r=>r.tot),'','전일대비'],['이번 주 누적 등록',wk.length,'개 단지',wk.length-lw.length,'개','전주대비']]}
- }else{
-  V={samp:true,date:'2026년 10월 30일 기준',
-   k:[['등록 아파트 수',128,'개 단지',12,'개'],['전체 세대 수',86532,'세대',3250,''],['총 견적 금액',184200000000,'원',18600000000,''],['진행 중 공사 단지',32,'개 단지',6,'개']],
-   rg:[['수도권','#1f64e0',42],['경상권','#7b61e6',38],['전라권','#27a9e1',18],['충청권','#f5a623',14],['강원권','#52c06a',6],['제주권','#6b7f99',10]],
-   bins:[['24평 이하','#2d7df6',44],['32평','#17b26a',36],['45평','#8b5cf0',23],['59평','#f5a623',15],['84평 이상','#aab4c8',10]],
-   gr:[['정비','#2d7df6',56],['재도장','#17b26a',34],['보수','#8b5cf0',18],['기타','#f5a623',12]],tot:128,
-   list:[['부산 해운대 아파트','부산광역시 해운대구','진행중','2026.10.28'],['울산 삼산 아파트','울산광역시 남구','완료','2026.10.25'],['대구 수성 아파트','대구광역시 수성구','검토중','2026.10.22'],['인천 송도 아파트','인천광역시 연수구','진행중','2026.10.20']].map(x=>({id:'',n:x[0],sub:x[1],st:x[2],d:x[3]})),
-   t:[['오늘 등록 단지',3,'개 단지',2,'개','전일대비'],['오늘 등록 세대수',1240,'세대',320,'','전일대비'],['오늘 등록 견적 금액',8600000000,'원',2200000000,'','전일대비'],['이번 주 누적 등록',12,'개 단지',4,'개','전주대비']]}
- }
+ /* v531: 지역·평형·세대수는 '단지 DB'(내장 K-apt 단지 면적정보 + 등록 단지)에서, 견적 금액·진행·공사 유형은 저장한 견적에서 계산 — 예시 데이터 없음 */
+ const dbOk=typeof DB!=='undefined'&&DB&&Array.isArray(DB.d)&&DB.d.length>0;
+ if(!dbOk&&!hqDash0.t){hqDash0.t=1;try{dbLoad().then(()=>{hqDash0.t=0;if(DB&&DB.d){const d=document.getElementById('hqdsh');if(d)d.innerHTML=hqDash()}}).catch(()=>{hqDash0.t=0})}catch(_){hqDash0.t=0}}
+ const rows=recs.map(e=>{const S=e.state||{},addr=S.addr||(S.kapt&&S.kapt.addr)||'',hh=(S.types||[]).reduce((s,t)=>s+Nn(t.c),0);return{e,id:e.id,n:e.name||'무제',addr,hh,tot:Nn(e.total),stt:HQZ_ST.includes(e.stt)?e.stt:'대기',ts:cts(e),S}});
+ const inM=r=>r.ts>=mS,sum=(a,f)=>a.reduce((s,r)=>s+f(r),0);
+ const prog=rows.filter(r=>r.stt=='진행중');
+ const D=dbOk?DB.d:[];
+ const hhOf=x=>x[9]!=null?(+x[9]||0):(x[8]||[]).reduce((s,z)=>s+(+z[1]||0),0);
+ const BN=[['59㎡ 이하','#2d7df6',v=>v<60],['60~84㎡','#17b26a',v=>v>=60&&v<85],['85~114㎡','#8b5cf0',v=>v>=85&&v<115],['115~134㎡','#f5a623',v=>v>=115&&v<135],['135㎡ 이상','#aab4c8',v=>v>=135]];
+ const rc={},bc=BN.map(()=>0);REG.forEach(r=>rc[r[0]]=0);let nHH=0;
+ for(const x of D){nHH+=hhOf(x);const g=regOf((DB.sd&&DB.sd[x[2]])||'');if(g)rc[g]++;const ts=x[8]||[];BN.forEach((b,i)=>{if(ts.some(z=>+z[0]>0&&b[2](+z[0])))bc[i]++})}
+ const rg=REG.map(r=>[r[0],r[1],rc[r[0]]]).sort((a,b)=>b[2]-a[2]);
+ const bins=BN.map((b,i)=>[b[0],b[1],bc[i]]);
+ const uc=(()=>{try{return new Set([...U.area,...U.info].map(r=>r.c))}catch(_){return new Set()}})();
+ const gr=[['외벽','#2d7df6',['out']],['옥상','#17b26a',['roof']],['주차장·바닥','#8b5cf0',['epx','pav']],['기타','#f5a623',['in','shg','cctv','gate','traf']]].map(g=>[g[0],g[1],rows.filter(r=>g[2].some(k=>r.S.inc&&r.S.inc[k])).length]);
+ const day=(f,t)=>rows.filter(r=>r.ts>=f&&r.ts<t);
+ const td=day(T0,T0+D1),yd=day(T0-D1,T0),wk=day(mon,mon+7*D1),lw=day(mon-7*D1,mon);
+ const rec=rows.slice().sort((a,b)=>b.ts-a.ts);
+ const list=rec.length?rec.slice(0,4).map(r=>({id:r.id,n:r.n,sub:r.addr||(((r.S.blds||[]).length)?(r.S.blds||[]).length+'개 동':'주소 미입력'),st:r.stt,d:dstr(r.ts)})):(dbOk?D.filter(x=>uc.has(x[0])).slice(-4).reverse().map(x=>({id:'',n:x[1],sub:((DB.sd&&DB.sd[x[2]])||'')+' '+((DB.sg&&DB.sg[x[3]])||''),st:'단지DB',d:''})):[]);
+ const V={samp:false,nodb:!dbOk,date:now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 기준',
+  k:[['단지 DB 아파트 수',D.length,'개 단지',uc.size,'개','등록 단지'],['전체 세대 수',nHH,'세대',sum(rows,r=>r.hh),'','견적 단지'],['총 견적 금액',sum(rows,r=>r.tot),'원',sum(rows.filter(inM),r=>r.tot),'','이번 달'],['진행 중 공사 단지',prog.length,'개 단지',prog.filter(inM).length,'개','이번 달']],
+  rg,bins,gr,tot:D.length,list,
+  t:[['오늘 등록 단지',td.length,'개 단지',td.length-yd.length,'개','전일대비'],['오늘 등록 세대수',sum(td,r=>r.hh),'세대',sum(td,r=>r.hh)-sum(yd,r=>r.hh),'','전일대비'],['오늘 등록 견적 금액',sum(td,r=>r.tot),'원',sum(td,r=>r.tot)-sum(yd,r=>r.tot),'','전일대비'],['이번 주 누적 등록',wk.length,'개 단지',wk.length-lw.length,'개','전주대비']]};
  const money=v=>{v=Math.abs(v);return v>=1e8?[Fm(v/1e8),'억원']:v>=1e4?[Fm(v/1e4),'만원']:[Fm(v),'원']};
  const mfmt=(v,u)=>{if(u=='원'){const m=money(v);return m}return[Fm(v),u]};
  const dl=(d,suf,lab)=>{const m=suf=='원'?money(d):[Fm(Math.abs(d)),suf],up=d>=0;return`<span class="${up?'up':'dn'}">${up?'▲':'▼'} ${m[0]}${suf=='원'?m[1]:suf} <i>(${lab})</i></span>`};
  /* ---------- 전체 현황 ---------- */
  const KC=[['b','bld'],['g','home'],['p','clip'],['o','roll']];
  let h='<div class="hqy">';
- h+=`<section class="yc"><div class="yh"><span class="yi">${SV(P.bld,1.7)}</span><b>전체 현황</b><em>${V.date} ${SV(P.chev,2.3)}</em></div><div class="y4">`+V.k.map((k,i)=>{const m=k[2]=='원'?money(k[1]):[Fm(k[1]),k[2]];const d=k[2]=='원'?money(k[3]):[Fm(k[3]),k[4]];return`<div class="yk ${KC[i][0]}"><span class="yd">${SV(P[KC[i][1]],2.2)}</span><small>${k[0]}</small><strong>${m[0]}<u>${k[2]=='원'?m[1]:k[2]}</u></strong><span class="up">▲ ${d[0]}${k[2]=='원'?d[1]:k[4]} <i>(이번 달)</i></span></div>`}).join('')+'</div></section>';
+ h+=`<section class="yc"><div class="yh"><span class="yi">${SV(P.bld,1.7)}</span><b>전체 현황</b><em>${V.date} ${SV(P.chev,2.3)}</em></div><div class="y4">`+V.k.map((k,i)=>{const m=k[2]=='원'?money(k[1]):[k[2]=='세대'&&k[1]>=1e6?Fm(k[1]/1e4)+'만':Fm(k[1]),k[2]];const d=k[2]=='원'?money(k[3]):[Fm(k[3]),k[4]];return`<div class="yk ${KC[i][0]}" onclick="hqGo('${i<2?'db':'est'}')" style="cursor:pointer"><span class="yd">${SV(P[KC[i][1]],2.2)}</span><small>${k[0]}</small><strong>${m[0]}<u>${k[2]=='원'?m[1]:k[2]}</u></strong><span class="up">▲ ${d[0]}${k[2]=='원'?d[1]:k[4]} <i>(${k[5]||'이번 달'})</i></span></div>`}).join('')+'</div></section>';
  /* ---------- 지역별 현황 (지도 + 표) ---------- */
  const tot=V.tot||1,cnt={};V.rg.forEach(r=>cnt[r[0]]=r[2]);
  const X=lon=>((lon-125.8)*49.6).toFixed(1),Y=lat=>((38.85-lat)*62).toFixed(1);
@@ -7578,24 +7575,24 @@ function hqDash0(){
  const pins={수도권:[37.5,126.85],강원권:[37.72,128.35],충청권:[36.6,126.95],경상권:[36.0,128.7],전라권:[35.4,126.9],제주권:[33.38,126.5]},pc={};REG.forEach(r=>pc[r[0]]=r[1]);
  const pin=(nm,c)=>{const p=pins[nm],x=X(p[1]),y=Y(p[0]),s=nm=='강원권'?.82:nm=='경상권'||nm=='수도권'?1:.9,col=pc[nm];return`<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 36L-11 20h22z" fill="${col}"/><circle cx="0" cy="0" r="27" fill="${col}"/><text x="0" y="-5" text-anchor="middle" style="font:700 12.5px sans-serif;fill:#fff">${nm.replace('권','')=='수도'?'수도권':nm}</text><text x="0" y="17" text-anchor="middle" style="font:800 21px sans-serif;fill:#fff">${c}</text></g>`};
  const map=`<svg class="ymap" viewBox="-16 -34 252 418"><defs><linearGradient id="yg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e4effc"/><stop offset="1" stop-color="#bfd8f4"/></linearGradient></defs><polygon points="${land}" fill="url(#yg)" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>${bd}<ellipse cx="${X(126.55)}" cy="${Y(33.38)}" rx="25" ry="10" fill="url(#yg)" stroke="#fff" stroke-width="2"/>${REG.map(r=>pin(r[0],cnt[r[0]]||0)).join('')}</svg>`;
- h+=`<div class="yg2"><section class="yc ya"><div class="yh"><span class="yi blue">${SV(P.pin,2)}</span><b>지역별 현황</b><a>전체보기 ${SV(P.chev,2.4)}</a></div><div class="yreg">${map}<table><tr><th>지역</th><th>단지 수</th><th>비율</th></tr>${V.rg.map(r=>`<tr><td><i style="background:${r[1]}"></i>${r[0]}</td><td><b>${r[2]}</b></td><td>${Math.round(r[2]/tot*100)}%</td></tr>`).join('')}</table></div></section>`;
+ h+=`<div class="yg2"><section class="yc ya"><div class="yh"><span class="yi blue">${SV(P.pin,2)}</span><b>지역별 현황</b><a onclick="hqGo('db')" style="cursor:pointer">전체보기 ${SV(P.chev,2.4)}</a></div><div class="yreg">${map}<table><tr><th>지역</th><th>단지 수</th><th>비율</th></tr>${V.rg.map(r=>`<tr><td><i style="background:${r[1]}"></i>${r[0]}</td><td><b>${r[2]}</b></td><td>${Math.round(r[2]/tot*100)}%</td></tr>`).join('')}</table></div></section>`;
  /* ---------- 평형별 현황 (도넛) ---------- */
  const bt=V.bins.reduce((s,b)=>s+b[2],0)||1;let ang=-Math.PI/2,seg='',lab='';const CX=60,CY=60,R1=54,R0=33;
  V.bins.forEach(b=>{const f=b[2]/bt;if(f<=0)return;const a2=ang+f*2*Math.PI,lg=f>.5?1:0,pt=(r,a)=>(CX+r*Math.cos(a)).toFixed(2)+' '+(CY+r*Math.sin(a)).toFixed(2);seg+=`<path d="M${pt(R1,ang)} A${R1} ${R1} 0 ${lg} 1 ${pt(R1,a2)} L${pt(R0,a2)} A${R0} ${R0} 0 ${lg} 0 ${pt(R0,ang)}Z" fill="${b[1]}" stroke="#fff" stroke-width="1.2"/>`;if(f>=.07){const m=(ang+a2)/2,r=(R1+R0)/2;lab+=`<text x="${(CX+r*Math.cos(m)).toFixed(1)}" y="${(CY+r*Math.sin(m)+2.4).toFixed(1)}" text-anchor="middle" style="font:700 6.4px sans-serif;fill:#fff">${Math.round(f*100)}%</text>`}ang=a2});
- h+=`<section class="yc yb"><div class="yh"><span class="yi blue">${SV(P.pie,2)}</span><b>평형별 현황</b><a>전체보기 ${SV(P.chev,2.4)}</a></div><div class="ydn"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${(R1+R0)/2}" fill="none" stroke="#e8eef8" stroke-width="${R1-R0}"/>${seg}${lab}</svg><div class="yc0"><b>${Fm(V.tot)}<small>개</small></b><span>단지</span></div></div><div class="yle">${V.bins.map(b=>`<div><i style="background:${b[1]}"></i><span>${b[0]}</span><small>${Fm(b[2])} 단지</small><b>${Math.round(b[2]/bt*100)}%</b></div>`).join('')}</div></section></div>`;
+ h+=`<section class="yc yb"><div class="yh"><span class="yi blue">${SV(P.pie,2)}</span><b>평형별 현황</b><a onclick="hqGo('db')" style="cursor:pointer">전체보기 ${SV(P.chev,2.4)}</a></div><div class="ydn"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${(R1+R0)/2}" fill="none" stroke="#e8eef8" stroke-width="${R1-R0}"/>${seg}${lab}</svg><div class="yc0"><b>${Fm(V.tot)}<small>개</small></b><span>단지</span></div></div><div class="yle">${V.bins.map(b=>`<div><i style="background:${b[1]}"></i><span>${b[0]}</span><small>${Fm(b[2])} 단지</small><b>${Math.round(b[2]/bt*100)}%</b></div>`).join('')}</div></section></div>`;
  /* ---------- 공사 유형별 현황 (막대) ---------- */
  const gmax=Math.max(1,...V.gr.map(g=>g[2])),step=gmax<=5?1:gmax<=10?2:gmax<=20?5:gmax<=50?10:20,top=Math.ceil(gmax/step)*step||step,ticks=[];for(let v=0;v<=top;v+=step)ticks.push(v);
  const GX=48,GW=300,GY=18,GH=170,bw=46,gap=(GW-bw*V.gr.length)/(V.gr.length+1);
  const bars=V.gr.map((g,i)=>{const x=GX+gap+(bw+gap)*i,hh=g[2]/top*GH,y=GY+GH-hh;return`<defs><linearGradient id="yb${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g[1]}"/><stop offset="1" stop-color="${g[1]}" stop-opacity=".72"/></linearGradient></defs><rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw}" height="${hh.toFixed(1)}" rx="3" fill="url(#yb${i})"><animate attributeName="height" from="0" to="${hh.toFixed(1)}" dur=".8s" fill="freeze"/><animate attributeName="y" from="${GY+GH}" to="${y.toFixed(1)}" dur=".8s" fill="freeze"/></rect><text x="${(x+bw/2).toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" style="font:700 11px sans-serif;fill:#0f1d3a">${g[2]}</text><text x="${(x+bw/2).toFixed(1)}" y="${GY+GH+17}" text-anchor="middle" style="font:500 10.5px sans-serif;fill:#42506b">${g[0]}</text>`}).join('');
  const grid=ticks.map(v=>{const y=GY+GH-v/top*GH;return`<line x1="${GX}" x2="${GX+GW}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#e3eaf5"/><text x="${GX-8}" y="${(y+3.5).toFixed(1)}" text-anchor="end" style="font:500 9.5px sans-serif;fill:#7a869c">${v}</text>`}).join('');
- h+=`<div class="yg2 yg3"><section class="yc yd2"><div class="yh"><span class="yi blue">${SV(P.type,1.8)}</span><b>공사 유형별 현황</b><a>전체보기 ${SV(P.chev,2.4)}</a></div><svg class="ybar" viewBox="0 0 370 220">${grid}${bars}</svg></section>`;
+ h+=`<div class="yg2 yg3"><section class="yc yd2"><div class="yh"><span class="yi blue">${SV(P.type,1.8)}</span><b>공사 유형별 현황</b><a onclick="hqGo('est')" style="cursor:pointer">전체보기 ${SV(P.chev,2.4)}</a></div><svg class="ybar" viewBox="0 0 370 220">${grid}${bars}</svg></section>`;
  /* ---------- 최근 등록 단지 ---------- */
- const th=typeof SXH2!='undefined'?SXH2:'',CH={진행중:['견적진행중','s1'],완료:['견적서완료','s2'],대기:['검토중','s3'],검토중:['검토중','s3'],지연:['지연','s4']};
+ const th=typeof SXH2!='undefined'?SXH2:'',CH={단지DB:['단지 DB','s3'],진행중:['견적진행중','s1'],완료:['견적서완료','s2'],대기:['검토중','s3'],검토중:['검토중','s3'],지연:['지연','s4']};
  h+=`<section class="yc ye"><div class="yh"><span class="yi blue">${SV(P.list,1.8)}</span><b>최근 등록 단지</b><a onclick="var e=document.querySelector('#hq .apc');if(e){e.open=true;e.scrollIntoView({behavior:'smooth'})}">전체보기 ${SV(P.chev,2.4)}</a></div>`+(V.list.length?V.list.map(r=>`<div class="yr"${r.id?` onclick="aptLoad('${r.id}')"`:''}><span class="yt" style="background-image:url(${th})"></span><div class="ynm"><b>${esc(r.n)}</b><small>${esc(r.sub)}</small></div><div class="yst"><span class="ch ${(CH[r.st]||CH.대기)[1]}"${r.id?` onclick="event.stopPropagation();hqzSt('${r.id}')"`:''}>${(CH[r.st]||CH.대기)[0]}</span><small>${r.d}</small></div></div>`).join(''):'<div class="ynone">아직 등록된 단지가 없습니다</div>')+'</section></div>';
  /* ---------- 최근 등록 현황 ---------- */
  const TC=[['b','bld'],['g','home'],['p','clip'],['o','bars']];
- h+=`<section class="yc"><div class="yh"><span class="yi blue">${SV(P.cal,1.8)}</span><b>최근 등록 현황</b><a>전체보기 ${SV(P.chev,2.4)}</a></div><div class="y4 yt4">`+V.t.map((k,i)=>{const m=k[2]=='원'?money(k[1]):[Fm(k[1]),k[2]];const up=k[3]>=0,dm=k[2]=='원'?money(k[3]):[Fm(Math.abs(k[3])),k[4]];return`<div class="yk ${TC[i][0]}"><div class="yl"><span class="yd">${SV(P[TC[i][1]],2.4)}</span><small>${k[0]}</small></div><strong>${m[0]}<u>${k[2]=='원'?m[1]:k[2]}</u></strong><span class="${up?'up':'dn'}">${up?'▲':'▼'} ${dm[0]}${k[2]=='원'?dm[1]:k[4]} <i>(${k[5]})</i></span></div>`}).join('')+'</div></section>';
- if(V.samp)h+='<div class="ynote">※ 예시 화면입니다 · 견적을 저장하면 실제 현장 통계로 바뀝니다 (주소를 입력하면 지역별 현황에 반영됩니다)</div>';
+ h+=`<section class="yc"><div class="yh"><span class="yi blue">${SV(P.cal,1.8)}</span><b>최근 등록 현황</b><a onclick="hqGo('est')" style="cursor:pointer">전체보기 ${SV(P.chev,2.4)}</a></div><div class="y4 yt4">`+V.t.map((k,i)=>{const m=k[2]=='원'?money(k[1]):[Fm(k[1]),k[2]];const up=k[3]>=0,dm=k[2]=='원'?money(k[3]):[Fm(Math.abs(k[3])),k[4]];return`<div class="yk ${TC[i][0]}"><div class="yl"><span class="yd">${SV(P[TC[i][1]],2.4)}</span><small>${k[0]}</small></div><strong>${m[0]}<u>${k[2]=='원'?m[1]:k[2]}</u></strong><span class="${up?'up':'dn'}">${up?'▲':'▼'} ${dm[0]}${k[2]=='원'?dm[1]:k[4]} <i>(${k[5]})</i></span></div>`}).join('')+'</div></section>';
+ h+='<div class="ynote">'+(V.nodb?'단지 DB를 불러오는 중입니다…':'※ 단지 수·세대·지역·평형은 단지 DB(내장 K-apt 면적정보 + 등록 단지) 기준 · 견적 금액·진행·공사 유형은 저장한 견적 기준입니다')+'</div>';
  return h+'</div>'}
 
 function shell(){const img=SXH2;const t=HQ.type;
