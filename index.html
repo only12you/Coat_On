@@ -3112,7 +3112,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v528',d:'2026.10.30'};
+const APPV={v:'v529',d:'2026.10.30'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -13191,6 +13191,27 @@ html body #vh #hinfo,html body #vh.cd details.hi{display:none!important}
 .pqif .hn{display:block;margin-top:8px;color:#5a6a85}
 .pqif .hw{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff4e5;border:1px solid #f3d3a2;color:#7a4a00}
 .pqif .pqig{margin-top:12px}
+
+/* v529 공동주택 대시보드 상하 간격 축소 (휴대폰 폭) */
+@media(max-width:560px){
+html body #hq header.aph{height:calc(var(--v)*340 + env(safe-area-inset-top))!important}
+html body #hq header.aph .axh{top:calc(var(--v)*64 + env(safe-area-inset-top))!important}
+html body #hq header.aph .axh em{margin-bottom:calc(var(--v)*8)}
+html body #hq header.aph .axh::after{margin-top:calc(var(--v)*16)!important}
+#hqdsh{margin-top:calc(var(--v)*-30)}
+.hqz{gap:9px}
+.hqz-p{padding:11px 12px}
+.hqz-h{margin-bottom:8px}
+.hqz-kc{padding:9px 10px 10px}.hqz-kc i{margin-bottom:5px}.hqz-kc b{margin:4px 0 7px}
+.hqz-r>.hqz-p{padding:11px 10px}
+.hqz-pg .dn{width:min(100%,112px)}
+.hqz-pg .lg div{padding:3px 0}
+.hqz-m button{min-height:64px!important;padding:7px 2px 6px!important;gap:3px}
+.hqz-l .row{padding:6px 0}
+.hqz-l .th{height:calc(var(--v)*54)}
+.hqz-bn{padding:10px 14px;min-height:0}
+.hqz-note{margin:-2px 0}
+}
 </style>
 <script id="fit526">
 /* v526: 첫 대시보드 한 화면 맞춤 — 기기 높이에 맞는 세로 배율(--vf) 계산 */
