@@ -3112,7 +3112,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v535',d:'2026.10.31'};
+const APPV={v:'v536',d:'2026.10.31'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -13442,8 +13442,10 @@ html body #cs .cell.ro .rov.emp{color:#c99aa5!important;font-weight:500!importan
 html body #cs .cg3.cgr .cell.ro{background:#fff!important}
 html body #cs .cg3.cgr .lb span{color:#10264f!important}
 /* 네온 깜박임 (입력된 코트) */
-@keyframes ccNeon{0%,100%{box-shadow:0 0 2.4px #39ff14,0 0 6.4px #39ff14,inset 0 0 2.4px rgba(255,255,255,.4);border-color:#39ff14;filter:brightness(1)}50%{box-shadow:0 0 4.8px #39ff14,0 0 12.8px #39ff14,0 0 22.4px #39ff14,inset 0 0 5.6px #39ff14;border-color:#b8ffa6;filter:brightness(1.15)}}
-html body #cs .cbox.neon{animation:ccNeon 1.5s ease-in-out infinite;border-width:1.6px;border-color:#39ff14;--nc:#39ff14}
-@media(prefers-reduced-motion:reduce){html body #cs .cbox.neon{animation:none;box-shadow:0 0 4px #39ff14,0 0 9.6px #39ff14}}
+@property --ccang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes ccSpin{to{--ccang:360deg}}
+html body #cs .cbox.neon{border-color:transparent!important;animation:none;box-shadow:none}
+html body #cs .cbox.neon::before{content:"";position:absolute;inset:-2px;border-radius:15px;padding:1.6px;pointer-events:none;background:conic-gradient(from var(--ccang),#4f5f24,#7b8b3d 25%,#c3d27a 45%,#7b8b3d 65%,#4f5f24);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:ccSpin 3s linear infinite}
+@media(prefers-reduced-motion:reduce){html body #cs .cbox.neon::before{animation:none}}
 </style>
 </body></html>
