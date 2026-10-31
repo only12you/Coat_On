@@ -2421,9 +2421,10 @@ async function dlCopy(){try{const tx=await window.__dlb.text();await navigator.c
 let IDBC=null;const idbOpen=()=>IDBC?Promise.resolve(IDBC):new Promise((ok,no)=>{const q=indexedDB.open('tds_'+EDITION,1);q.onupgradeneeded=()=>q.result.createObjectStore('f');q.onsuccess=()=>{IDBC=q.result;IDBC.onclose=IDBC.onversionchange=()=>{try{IDBC.close()}catch(e){}IDBC=null};ok(IDBC)};q.onerror=()=>no(q.error)}),idb=(m,k,v)=>idbOpen().then(d=>new Promise((ok,no)=>{const s=d.transaction('f',m=='get'?'readonly':'readwrite').objectStore('f'),r=m=='get'?s.get(k):m=='del'?s.delete(k):s.put(v,k);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}));
 const rec=p=>({dft:+p.dft||0,svr:+p.svr||0,loss:10,tr:p.tr?+(p.tr*100).toFixed(1):0}),ev=(c,p)=>{const r=rec(p),g=k=>c[k]===undefined||c[k]===''||c[k]===null?r[k]:+c[k];return{dft:g('dft'),svr:g('svr'),loss:g('loss'),tr:g('tr')}};
 const UN=p=>/kg|㎏/i.test((p&&p.un)||'')?'kg':'L';
+function thFb(){try{const L=[].concat(S.coats||[],(window.SY&&SY.layers)||[]);for(const x of L){const q=x&&x.n?PC(x.n):null;if(q&&+q.ts>0)return +q.ts}}catch(e){}return 0}
 function calc(c){const p=PC(c.n);if(!p)return null;const e=ev(c,p),dft=e.dft,svr=e.svr;if(!dft||!svr)return null;const pk=+p.mk||+p.pk||18,L=e.loss/100,thv=dft/(svr*10),acv=thv/(1-L),kg=UN(p)=='kg'&&+p.sg>0,fm=kg?+p.sg:1,th=thv*fm,ac=acv*fm,up=(+c.price||0)/pk,rt=svr*10/dft/fm;
 const o=[{nm:c.n||p.n,use:p.g||p.d,th,ac,a1:[pk*rt,pk*rt*(1-L)],u:up,amt:ac*up,pk}],r=e.tr/100;
-if(r>0){const tk=+p.ts||18,tp=(+c.tprice||0)/tk;o.push({nm:'└ 전용 희석제: '+tnClean(p.tn||'희석제')+(p.tc&&p.tc!=p.tn?' ('+p.tc+')':''),use:'희석제 '+(p.tc||''),th:thv*r,ac:acv*r,a1:null,u:tp,amt:acv*r*tp,pk:tk})}return o}
+if(r>0){const tk=+p.ts||thFb()||18,tp=(+c.tprice||0)/tk;o.push({nm:'└ 전용 희석제: '+tnClean(p.tn||'희석제')+(p.tc&&p.tc!=p.tn?' ('+p.tc+')':''),use:'희석제 '+(p.tc||''),th:thv*r,ac:acv*r,a1:null,u:tp,amt:acv*r*tp,pk:tk})}return o}
 function U(i,k,v){const c=S.coats[i];c[k]=v;if(k=='n'){const p=P(v);c.dft=c.tr=c.loss='';c.svr=p&&p.svr||'';sv();return cards()}res();sv()}
 const CI={dft:SV('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17.5l9 5 9-5" opacity=".55"/>'),svr:SV('<path d="M6 18L18 6"/><circle cx="7.5" cy="7.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/>'),loss:SV('<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>'),tr:SV('<path d="M12 3c-3.4 4.3-6 7.6-6 11a6 6 0 0 0 12 0c0-3.4-2.6-6.7-6-11z"/>'),area:SV('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),price:SV('<circle cx="12" cy="12" r="9"/><path d="M7.5 9l2 7 2.5-5 2.5 5 2-7M7 12h10M7.5 14.2h9"/>'),th:SV('<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/>'),flask:SV('<path d="M9 3h6M10 3v6l-5.5 9.5A1.5 1.5 0 0 0 5.8 21h12.4a1.5 1.5 0 0 0 1.3-2.5L14 9V3"/><path d="M7.5 15h9"/>')};
 const EXP={dft:'예: 200',svr:'예: 70',loss:'예: 10',tr:'예: 5',price:'예: 45,000',tprice:'예: 3,000'};
@@ -3112,7 +3113,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v539',d:'2026.10.31'};
+const APPV={v:'v540',d:'2026.10.31'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
