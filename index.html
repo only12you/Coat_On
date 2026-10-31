@@ -2505,7 +2505,7 @@ rows+=`<div class=xpr>${xb(i,Lh,Rh)}</div>`;
 const fl=x=>F(Math.floor(x/10)*10,0),FM='<div class=fmb><b>■ 소요량 산출 공식</b><div class=fmr><b>이론 소요량</b> [L/㎡]</div><div class=fmf>추천도막두께[㎛] ÷ (SVR[%] × 10)</div><div class=fmr><b>실제 소요량</b> [L/㎡]</div><div class=fmf>이론 소요량 ÷ (1 − Loss[%] ÷ 100)</div><small>※ kg 단위 제품은 비중을 곱해 kg/㎡로 환산<br>예) 추천도막두께 100㎛ · SVR 50% · Loss 10% → 이론 0.2 / 실제 약 0.22 L/㎡</small></div>',NT='<div class=nt>⚠ 본 자료는 참고용이며 현장 상황·작업자 숙련도에 따라 실제 사용량은 다를 수 있습니다. 산출 근거는 도료 소요량 공식이며, 활용에 따른 판단과 책임은 사용자에게 있으며, 제작자는 법령이 허용하는 범위에서 책임을 지지 않습니다.</div>';
 const BU={};PT.forEach(r=>{const k=r.u==='ℓ'?'L':r.u;BU[k]=(BU[k]||0)+r.q});const tLq=PT.reduce((z,r)=>z+r.tq,0),f2=x=>(+x).toFixed(2),jn=o=>{const e=Object.entries(o).filter(([k,v])=>v>0);return e.length?e.map(([k,v])=>`${f2(v)}<small>${k}</small>`).join(' + '):`0.00<small>L</small>`},TT=Object.assign({},BU);if(tLq>0)TT.L=(TT.L||0)+tLq;const DRP='<svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="currentColor" style="flex:none"><path d="M12 2.5c-3.4 4.3-6 7.6-6 11a6 6 0 0 0 12 0c0-3.4-2.6-6.7-6-11z"/></svg>';
 const sP=PT.reduce((z,r)=>z+r.pa,0),sD=PT.reduce((z,r)=>z+r.da,0),tcl=PT.map(r=>`<div class=tcr style="${cvars(r.i)}"><span class=tcn><i>${r.o}</i>${esc(r.nm)}</span><span class=tcq>${r.Ac>0?F(r.q)+r.u+' → '+r.k+'말'+(r.tn?' · 희석제 '+F(r.tq)+'L':''):'면적 입력 시 표시'}</span><span class=tca>${r.Ac>0?F(r.pa+r.da,0)+'원':'-'}</span></div>`).join('');
-$('#rs').innerHTML=(any?`<div class=rcw><div class=rch>${DRP}소요량 계산 결과</div><div class=rcb><div class=rcg><div class="rcc rth"><div class=rcl><b>이론 소요량 <small>(L/㎡)</small></b></div><div class=rcf>DFT[㎛] ÷ (SVR[%] × 10)</div><div class=rcv>${F(sTh)}<small>L/㎡</small></div></div><div class="rcc rac"><div class=rcl><b>실제 소요량 <small>(L/㎡)</small></b></div><div class=rcf>이론 ÷ (1 − Loss[%]÷100)</div><div class=rcv>${F(sAc)}<small>L/㎡</small></div></div></div><div class=rcs><div><span>소요량(예상)</span><b>${jn(BU)}</b></div><div><span>희석제 소요량</span><b>${jn({L:tLq})}</b></div><div><span>총 소요량</span><b>${jn(TT)}</b></div></div></div></div><div class=tcd><div class=tct><span>총 금액<small>제품 + 희석제 · VAT 별도</small></span><b>${(T2+SBA)>0?F(T2+SBA,0)+'<small>원</small>':'-'}</b></div><div class=tcm><span>제품 <b>${F(sP,0)}원</b></span><span>희석제 <b>${F(sD,0)}원</b></span>${SBA>0?`<span>부자재 <b>${F(SBA,0)}원</b></span>`:''}<span>㎡당 <b>${fl(tot)}원</b></span></div><div class=tcl>${tcl}${SBR.map(r=>`<div class=tcr><span class=tcn><i>+</i>${esc(r.n)}</span><span class=tcq>${F(r.q)}${r.u}</span><span class=tca>${r.p>0?F(Math.round(r.q*r.p),0)+'원':'-'}</span></div>`).join('')}</div><div class=tch>${T2>0?'십원 미만 절사 · 소요량 단위 L·kg/㎡':'면적과 단가를 입력하면 총 금액이 표시됩니다'}</div></div><details class="rsd rtop" ${window.RSO===false?'':'open'} ontoggle="window.RSO=this.open"><summary><span class=rtt>${DRP}세부 내역 · 출력</span><button class="lk qgen" style="float:right" onclick="event.stopPropagation();est()">견적서 생성</button></summary>${rdHTML()}</details>`:'')+(any?FM:'')+NT;rcFit()}
+$('#rs').innerHTML=(any?`<div class=rcw><div class=rch><span class=rcht>${DRP}소요량 계산 결과</span><button type=button class=rdb onclick="rdOpen()">세부 내역</button></div><div class=rcb><div class=rcg><div class="rcc rth"><div class=rcl><b>이론 소요량 <small>(L/㎡)</small></b></div><div class=rcf>DFT[㎛] ÷ (SVR[%] × 10)</div><div class=rcv>${F(sTh)}<small>L/㎡</small></div></div><div class="rcc rac"><div class=rcl><b>실제 소요량 <small>(L/㎡)</small></b></div><div class=rcf>이론 ÷ (1 − Loss[%]÷100)</div><div class=rcv>${F(sAc)}<small>L/㎡</small></div></div></div><div class=rcs><div><span>소요량(예상)</span><b>${jn(BU)}</b></div><div><span>희석제 소요량</span><b>${jn({L:tLq})}</b></div><div><span>총 소요량</span><b>${jn(TT)}</b></div></div></div></div><div class=tcd><div class=tct><span>총 금액<small>제품 + 희석제 · VAT 별도</small></span><b>${(T2+SBA)>0?F(T2+SBA,0)+'<small>원</small>':'-'}</b></div><div class=tcm><span>제품 <b>${F(sP,0)}원</b></span><span>희석제 <b>${F(sD,0)}원</b></span>${SBA>0?`<span>부자재 <b>${F(SBA,0)}원</b></span>`:''}<span>㎡당 <b>${fl(tot)}원</b></span></div><div class=tcl>${tcl}${SBR.map(r=>`<div class=tcr><span class=tcn><i>+</i>${esc(r.n)}</span><span class=tcq>${F(r.q)}${r.u}</span><span class=tca>${r.p>0?F(Math.round(r.q*r.p),0)+'원':'-'}</span></div>`).join('')}</div><div class=tch>${T2>0?'십원 미만 절사 · 소요량 단위 L·kg/㎡':'면적과 단가를 입력하면 총 금액이 표시됩니다'}</div></div><details class="rsd rtop" ${window.RSO===false?'':'open'} ontoggle="window.RSO=this.open"><summary><span class=rtt>${DRP}세부 내역 · 출력</span><button class="lk qgen" style="float:right" onclick="event.stopPropagation();est()">견적서 생성</button></summary>${rdHTML()}</details>`:'')+(any?FM:'')+NT;rcFit()}
 async function tds(n0,ci){const n=attK(n0,ci);if(!n)return tt('등록된 TDS가 없습니다');const p=P(n);const f=await idb('get',n).catch(()=>0);if(f){const bl=f.buf?new Blob([f.buf],{type:f.type}):f.b;vwr(bl,f.name,f.type||bl.type||'')}else if(p&&p.url)open(p.url);else tt('등록된 TDS가 없습니다. "TDS 첨부"로 PDF를 추가하거나 DB의 TDS링크 열에 주소를 넣으세요.')}
 const attK=(n,i)=>(n||'').trim()||(i!=null?'~c'+i:'');
 function att(n0,ci){const n=attK(n0,ci);if(!n)return tt('제품명을 입력하거나 일위대가표 칸에서 첨부하세요');const i=document.createElement('input');i.type='file';i.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';document.body.append(i);
@@ -3130,7 +3130,7 @@ if(s.tn)s.tn=s.tn.replace(/^\/\s*|\s*(?:저장\s*기간|포장\s*규격|색상|�
 return s};
 parseDry=L=>D(normL(L).filter(l=>!NZ.test(l)));parsePot=L=>P(normL(L).filter(l=>!NZ.test(l)))}
 
-const APPV={v:'v550',d:'2026.10.31'};
+const APPV={v:'v552',d:'2026.10.31'};
 function gnav(n){document.body.classList.toggle('inapp',n!=2);document.querySelectorAll('#gnav .hni').forEach((b,i)=>b.classList.toggle('on',i==NAVI(n)))}
 const APPMK={n:'',c:''};/* 제작자 정보: 현재 비공개. 값을 넣으면 '저작권·이용 안내'에 제작자 행이 나타납니다 */
 function showInfo(){
@@ -13600,4 +13600,28 @@ html body .rdr.tnr>span,html body .rdr.tnr .l,html body .rdr.dt.tn .l b,html bod
 html body .rdr.tnr .qq{color:#0f6b57!important;font-weight:800!important}
 html body .rdr.dt.tn .l b{font-weight:700!important}
 html body .rdr.tnr .l em{display:none!important}</style>
+<style id="rdm551">
+html body #rs .rch{display:flex!important;flex-direction:row!important;align-items:center;justify-content:space-between;gap:8px}
+html body #rs .rch .rcht{display:flex;flex:1 1 auto;align-items:center;gap:6px;min-width:0;white-space:nowrap}
+html body #rs .rch .rdb{flex:none!important;width:auto!important;min-width:0!important;margin:0 0 0 auto!important;height:26px!important;padding:0 12px;border-radius:999px;border:1.5px solid rgba(255,255,255,.9);background:rgba(255,255,255,.18);color:#fff;font:800 12px "Noto Sans KR",system-ui,sans-serif;letter-spacing:-.02em}
+#rdm{position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483600;background:rgba(10,25,60,.5);display:flex;align-items:flex-end;justify-content:center;animation:rdmf .18s ease-out}
+@keyframes rdmf{from{opacity:0}to{opacity:1}}
+#rdm .rdms{position:relative;width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -8px 30px rgba(10,30,80,.3);animation:rdms .22s ease-out}
+@keyframes rdms{from{transform:translateY(40px)}to{transform:none}}
+#rdm .rdmh{flex:none;display:flex;align-items:center;justify-content:space-between;padding:12px 14px 10px 18px;border-bottom:1px solid #e3ebf8}
+#rdm .rdmh b{font-size:16px;color:#0b2354;font-weight:800}
+#rdm .rdmx{width:34px;height:34px;border-radius:50%;border:0;background:#eaf0fa;color:#0b2354;display:grid;place-items:center;padding:0}
+#rdm .rdmx svg{width:18px;height:18px}
+#rdm .rdmb{overflow:auto;padding:4px 12px calc(env(safe-area-inset-bottom,0px) + 14px);-webkit-overflow-scrolling:touch}
+#rdm .rdmf2{flex:none;padding:8px 14px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:1px solid #e3ebf8}
+#rdm .rdmf2 button{width:100%;height:42px;border-radius:12px;border:0;background:#0b4fd0;color:#fff;font:800 14px "Noto Sans KR",system-ui,sans-serif}
+</style>
+<script>
+function rdOpen(){try{const o=document.getElementById('rdm');if(o)o.remove();const e=document.createElement('div');e.id='rdm';
+e.innerHTML='<div class="rdms" role="dialog" aria-modal="true"><div class="rdmh"><b>세부 내역</b><button type="button" class="rdmx" aria-label="닫기" onclick="rdClose()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="rdmb">'+rdHTML()+'</div><div class="rdmf2"><button type="button" onclick="rdClose()">닫기</button></div></div>';
+e.addEventListener('click',ev=>{if(ev.target===e)rdClose()});document.body.appendChild(e)}catch(x){tt('세부 내역을 열지 못했습니다')}}
+function rdClose(){const o=document.getElementById('rdm');if(o)o.remove()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')rdClose()});
+</script>
+<style id="sb552">html body #sbx .sbh{max-width:none!important}html body #sbx .sbh small{white-space:nowrap!important;font-size:10.5px!important;letter-spacing:-.04em}html body #sbx .sbh b{white-space:nowrap}</style>
 </body></html>
