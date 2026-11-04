@@ -15180,6 +15180,8 @@ html body #bb#bb,html body #bb3#bb3,html body.cp #bb#bb{bottom:var(--gnh)!import
 html body #qmb{bottom:calc(var(--gnh) + 14px)!important}
 body.mhp #qmb{bottom:calc(var(--gnh) + 14px)!important}
 html body{padding-bottom:var(--gnh)}
+html body #qmb#qmb,html body #qmo{display:none!important}
+html body .qmp{bottom:calc(var(--gnh) + 10px)!important}
 </style>
 <script id=gnv2s>
 (function(){
@@ -15188,8 +15190,7 @@ var B=[['home','홈'],['calc','산출'],['chart','분석'],['db','DB'],['more','
 function mk(){var n=document.getElementById('gnv2');if(n)return n;n=document.createElement('nav');n.id='gnv2';n.setAttribute('aria-label','하단 메뉴');
  n.innerHTML=B.map(function(b){return '<button type="button" data-g="'+b[0]+'"><svg viewBox="0 0 24 24">'+I[b[0]]+'</svg><span>'+b[1]+'</span></button>'}).join('');
  n.addEventListener('click',function(e){var b=e.target.closest('[data-g]');if(!b)return;var k=b.getAttribute('data-g');try{navigator.vibrate&&navigator.vibrate(10)}catch(x){}
-  try{if(k=='home')T(2);else if(k=='calc')T(0);else if(k=='chart'){T(9);setTimeout(function(){try{LCCX.tab(0)}catch(x){}},30)}else if(k=='db'){window.SYM='db';window.SYK=1;T(3)}
-  else{var q=document.getElementById('qmb');if(q){q.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientY:0}));q.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,clientY:0}))}}}catch(x){}});
+  try{if(k=='home'){try{window.navSubClose&&navSubClose()}catch(x){}T(2)}else{var cid={calc:'calc',chart:'ana',db:'db',more:'adm'}[k];if(window.navSub){navSub(cid);setTimeout(hh,0)}}}catch(x){}});
  document.body.appendChild(n);return n}
 function mark(){var n=mk(),pg=document.body.dataset.pg,k=pg=='2'?'home':pg=='0'?'calc':pg=='9'?'chart':(pg=='3'&&window.SYM=='db')||pg=='1'?'db':'';
  n.querySelectorAll('[data-g]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-g')==k)})}
@@ -15199,4 +15200,5 @@ new MutationObserver(function(){mark();hh()}).observe(document.body,{attributes:
 setInterval(function(){mark();hh()},400);
 })();
 </script>
+<style id="gsub900">html body #gsub#gsub .gsp{bottom:calc(var(--gnh,50px) + 8px)!important}html body #gsub#gsub .gsb{bottom:var(--gnh,50px)!important}</style>
 </body></html>
