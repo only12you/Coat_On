@@ -2439,7 +2439,7 @@ let IDBC=null;const idbOpen=()=>IDBC?Promise.resolve(IDBC):new Promise((ok,no)=>
 const rec=p=>({dft:+p.dft||0,svr:+p.svr||0,loss:10,tr:p.tr?+(p.tr*100).toFixed(1):0}),ev=(c,p)=>{const r=rec(p),g=k=>c[k]===undefined||c[k]===''||c[k]===null?r[k]:+c[k];return{dft:g('dft'),svr:g('svr'),loss:g('loss'),tr:g('tr')}};
 const UN=p=>/kg|㎏/i.test((p&&p.un)||'')?'kg':'L';
 function thFb(){try{const L=[].concat(S.coats||[],(window.SY&&SY.layers)||[]);for(const x of L){const q=x&&x.n?PC(x.n):null;if(q&&+q.ts>0)return +q.ts}}catch(e){}return 0}
-function calc(c){const p=PC(c.n);if(!p)return null;const e=ev(c,p),dft=e.dft,svr=e.svr;if(!dft||!svr)return null;const pk=+p.mk||+p.pk||18,L=e.loss/100,tsv=tsL(p),thv=tsv?(1/tsv)*(+p.dft>0?dft/p.dft:1):dft/(svr*10),acv=thv/(1-L),kg=UN(p)=='kg'&&+p.sg>0,fm=kg?+p.sg:1,th=thv*fm,ac=acv*fm,up=(+c.price||0)/pk,rt=1/thv/fm;
+function calc(c){const p=PC(c.n);if(!p)return null;const e=ev(c,p),dft=e.dft,svr=e.svr;if(!dft||!svr)return null;const pk=+p.mk||+p.pk||18,L=e.loss/100,thv=dft/(svr*10),acv=thv/(1-L),kg=UN(p)=='kg'&&+p.sg>0,fm=kg?+p.sg:1,th=thv*fm,ac=acv*fm,up=(+c.price||0)/pk,rt=1/thv/fm;
 const o=[{nm:c.n||p.n,use:p.g||p.d,th,ac,a1:[pk*rt,pk*rt*(1-L)],u:up,amt:ac*up,pk}],r=e.tr/100;
 if(r>0){const tk=+p.ts||thFb()||18,tp=(+c.tprice||0)/tk;o.push({nm:'└ 전용 희석제: '+tnClean(p.tn||'희석제')+(p.tc&&p.tc!=p.tn?' ('+p.tc+')':''),use:'희석제 '+(p.tc||''),th:thv*r,ac:acv*r,a1:null,u:tp,amt:acv*r*tp,pk:tk})}return o}
 function U(i,k,v){const c=S.coats[i];c[k]=v;if(k=='n'){const p=P(v);c.dft=c.tr=c.loss='';c.svr=p&&p.svr||'';sv();return cards()}res();sv()}
@@ -2774,13 +2774,13 @@ const dryC=s=>{const R=String(s).split(/[;\n]/).map(x=>x.trim()).filter(Boolean)
 return `<div class=dka1><div class=dkc><div class=dkc0><span></span><span>지촉</span><span>고화</span><span>완전경화</span></div>${R.map(c=>{const mn=has(c[4]),mxv=has(c[5]);return `<div class=dkb style="${dtc(c[0])}"><div class=dkm><span class=dkt>${c[0]||'?'}</span><span class=dkx>${dfm(c[1])}</span><span class=dkx>${dfm(c[2])}</span><span class=dkx>${dfm(c[3])}</span></div><div class=dkq><span class=dkrl>재도장 간격</span>${mn||mxv?`<span class=dkrv><em>최소</em><span class=dkx>${dfm(c[4])}</span><i>→</i><em>최대</em><span class=dkx>${dfm(c[5]||'')}</span></span>`:'<span class=dn>–</span>'}</div></div>`}).join('')}</div></div><div class=hint>지촉: 손에 묻지 않는 시간 · 고화: 눌러도 자국이 없는 시간 · 완전경화: 사용 가능 상태 · 재도장: 다음 코트 도장 가능 간격(최소~최대)</div>`};
 const spec=p=>{const m=+p.mk||+p.pk||0,a=+p.pk||0,u=UN(p),two=m>a&&a>0;return `<div class=w><table><tr><th>주제 출고규격<th>경화제 규격<th>혼합규격(1말)<th>혼합비(주:경)</tr><tr><td>${F(a||m)}${u}<td>${two?F(m-a)+u:'-'}<td>${F(m)}${u}<td>${two?F(a/(m-a),2)+' : 1':'단액형'}</table></div>`};
 const dry=p=>(p.dry||p.pot)?(p.pot?`<div class=dpot><span>가사시간</span><b>${esc(p.pot)}</b></div>`:'')+(p.dry?dryC(p.dry)+(p.dsrc?'<div class=hint>TDS에서 자동 추출 · 원문과 대조 필요</div>':''):''):'';
-const tdsFx=(p,u,a,te,ae)=>{try{const lbs=e=>e&&e.parentElement&&e.parentElement.querySelector('.lb span');const on=p&&+p.ths>0&&a&&a.th>0&&a.ac>0,tu=on?(p.thu=='kg'?'kg':'L'):u,cv=v=>{let c=1/v;if(on&&tu!=u&&+p.sg>0)c=tu=='kg'?c/p.sg:c*p.sg;return c};
+const tdsFx=(p,u,a,te,ae)=>{try{const lbs=e=>e&&e.parentElement&&e.parentElement.querySelector('.lb span');const on=false,tu=on?(p.thu=='kg'?'kg':'L'):u,cv=v=>{let c=1/v;if(on&&tu!=u&&+p.sg>0)c=tu=='kg'?c/p.sg:c*p.sg;return c};
  [[te,a&&a.th,'이론',u],[ae,a&&a.ac,'실제',u]].forEach(([e,v,nm,u0])=>{const l=lbs(e);if(!e||!l)return;if(on){l.textContent=nm+' 도포율 (㎡/'+tu+')';e.textContent=F(cv(v),2)}else l.textContent=nm+' 소요량 ('+u0+'/m²)'})}catch(_){}};
-const tdsHh=(p,u,a)=>{if(p&&+p.ths>0&&a&&a.ac>0){const tu=p.thu=='kg'?'kg':'L';let c=1/a.ac;if(tu!=u&&+p.sg>0)c=tu=='kg'?c/p.sg:c*p.sg;return '실제 '+F(c,2)+'㎡/'+tu}return '실제 '+F(a.ac)+u+'/㎡'};
+const tdsHh=(p,u,a)=>{if(false){const tu=p.thu=='kg'?'kg':'L';let c=1/a.ac;if(tu!=u&&+p.sg>0)c=tu=='kg'?c/p.sg:c*p.sg;return '실제 '+F(c,2)+'㎡/'+tu}return '실제 '+F(a.ac)+u+'/㎡'};
 const rgT=p=>{try{const m=String(p.thr||'').match(/([\d.]+)~([\d.]+)/);if(!m||!(+p.ths>0))return null;const u=UN(p),tu=p.thu=='kg'?'kg':'L';if(tu!=u)return null;const lo=+m[1],hi=+m[2],f=F,mm=mx(p).m;let d='';if(+p.svr>0){const k=tu=='kg'?(+p.sg>0?+p.sg:0):1;if(k)d=f(p.svr*10/(hi*k),0)+'~'+f(p.svr*10/(lo*k),0)+'㎛'}return{a:f(lo,1)+'~'+f(hi,1)+'㎡/'+tu,q:f(1/hi,2)+'~'+f(1/lo,2)+' '+u+'/㎡',c:mm>0?f(mm*lo,0)+'~'+f(mm*hi,0)+'㎡':'',d}}catch(_){return null}};
 const tsL=p=>{const v=+p.ths;if(!(v>0))return 0;return p.thu=='kg'?(+p.sg>0?v*p.sg:0):v};
-const thc=p=>tsL(p)||(p.dft&&p.svr?p.svr*10/p.dft:(UN(p)=='kg'?0:+p.th||0));
-const thq=p=>{const d=+p.dft,v=+p.svr,ts=tsL(p);if(ts)return 1/ts*(UN(p)=='kg'&&+p.sg>0?+p.sg:1);if(!d||!v)return 0;return d/(v*10)*(UN(p)=='kg'&&+p.sg>0?+p.sg:1)};
+const thc=p=>p.dft&&p.svr?p.svr*10/p.dft:(UN(p)=='kg'?0:+p.th||0);
+const thq=p=>{const d=+p.dft,v=+p.svr;if(!d||!v)return 0;return d/(v*10)*(UN(p)=='kg'&&+p.sg>0?+p.sg:1)};
 const cov1=p=>{const q=thq(p);return q?mx(p).m/q:0};
 const kv=(k,v)=>`<div class=k>${k}</div><div class=vv>${v}</div>`;
 const intro=p=>{const m=mx(p),u=UN(p),two=m.b>0,t=thc(p),T=(k,l,v,o)=>`<div class="bst ${k}${o&&o.w?' w':''}${o&&o.big?' big':''}${o&&o.l?' l':''}${o&&o.one?' one':''}"><span class=bsl>${l}</span><span class=bsv>${v}${o&&o.s?`<small class=bss>${o.s}</small>`:''}</span></div>`;
