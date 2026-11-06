@@ -2657,7 +2657,7 @@ if(o.svr==null&&/고형분|solids/i.test(l)){m=l.match(/(?:용적|vol(?:ume)?)[^
 if(o.sg==null&&/비중|specific\s*gravity|density/i.test(l)&&!/혼합비/.test(l)){const v=NUMS(l.replace(/^.*?(?:비중|specific\s*gravity|density)/i,''),/[℃°㎛%]|um|μm|µm/i).find(x=>x>=.5&&x<=5);if(v)o.sg=v}
 if(o.mixa==null&&/혼합비|mixing\s*ratio/i.test(l)){m=l.match(/(\d+(?:\.\d+)?)\s*[:：]\s*(\d+(?:\.\d+)?)/);if(m&&+m[1]>0&&+m[2]>0){o.mixa=+m[1];o.mixb=+m[2]}}
 if(o.dft==null&&/(권장|표준|적정|건조)[^\d\n]{0,12}도막|도막\s*두께|DFT/i.test(l)&&!/습윤|WFT|wet/i.test(l)){m=l.replace(/(\d),(\d{3})/g,'$1$2').match(/(\d+(?:\.\d+)?)(?:\s*[~\-–]\s*(\d+(?:\.\d+)?))?\s*(?:㎛|μm|µm|um|micron)/i);if(m){const a=+m[1],b=m[2]?+m[2]:0,v=b>a?Math.round((a+b)/2):a;if(v>=5&&v<=999)o.dft=v}}
-if(o.th==null&&/이론\s*(도포율|살포율|도포면적)|theoretical\s*spreading|spreading\s*rate/i.test(l)){const v=NUMS(l.replace(/^.*?(?:이론\s*(?:도포율|살포율|도포면적)|theoretical\s*spreading|spreading\s*rate)/i,''),/[℃°㎛%]|um|μm|µm/i).find(x=>x>=.5&&x<=200);if(v){o.th=v;o.ths=v;o.thu=/(㎡|m2|m²)\s*\/\s*(kg|㎏)/i.test(l)?'kg':'L'}}
+if(o.th==null&&/이론\s*(도포율|살포율|도포면적)|theoretical\s*spreading|spreading\s*rate/i.test(l)){const _t=l.replace(/^.*?(?:이론\s*(?:도포율|살포율|도포면적)|theoretical\s*spreading|spreading\s*rate)/i,''),_r=_t.match(/(\d+(?:\.\d+)?)\s*[~∼～–-]\s*(\d+(?:\.\d+)?)/);let v=NUMS(_t,/[℃°㎛%]|um|μm|µm/i).find(x=>x>=.5&&x<=200);if(_r&&+_r[2]>+_r[1]&&+_r[1]>=.3&&+_r[2]<=200){v=+((+_r[1]+ +_r[2])/2).toFixed(2);o.thr=_r[1]+'~'+_r[2]}if(v){o.th=v;o.ths=v;o.thu=/(㎡|m2|m²)\s*\/\s*(kg|㎏)/i.test(l)?'kg':'L'}}
 if(o.tr==null&&/희석율|희석\s*비율|thinning/i.test(l)){if(/무희석|불필요|not\s*required/i.test(l))o.tr=0;else{m=l.match(/(\d+(?:\.\d+)?)(?:\s*[~\-–]\s*(\d+(?:\.\d+)?))?\s*%/);if(m){const v=Math.max(+m[1],+(m[2]||0));if(v>=0&&v<=50)o.tr=+(v/100).toFixed(3)}}}
 for(const mm of l.matchAll(/주제[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*(ℓ|L|리터|㎏|kg)[^\d\n]{0,12}경화제[^\d\n]{0,8}(\d+(?:\.\d+)?)/gi)){if(+mm[1]>0&&+mm[3]>0){const t=+(+mm[1]+ +mm[3]).toFixed(2);(o.packl=o.packl||[]).push({v:t,u:/kg|㎏/i.test(mm[2])?'㎏':'ℓ'});if(o.pk==null||t>o.mk){o.pk=+mm[1];o.mk=t;o.pun=/kg|㎏/i.test(mm[2])?'㎏':'ℓ'}}}
 if(!/주제/.test(l)&&/(?:포장\s*단위|포장\s*규격|포장|출고\s*규격|공급\s*단위|판매\s*단위|용량|규격|패키지|packing|package|pack\s*size)/i.test(l)){let seg=l.replace(/^.*?(?:포장\s*단위|포장\s*규격|포장|출고\s*규격|공급\s*단위|판매\s*단위|용량|규격|패키지|packing|package|pack\s*size)/i,''),z=[...seg.matchAll(/(\d+(?:\.\d+)?)\s*(ℓ|L|리터|㎏|kg|liters?|litres?)(?![a-z])/gi)];if(!z.length&&L[q+1]&&!LBL.test(sq(L[q+1])))z=[...L[q+1].matchAll(/(\d+(?:\.\d+)?)\s*(ℓ|L|리터|㎏|kg|liters?|litres?)(?![a-z])/gi)];z.forEach(x=>{if(+x[1]>0&&+x[1]<=1000)(o.packl=o.packl||[]).push({v:+x[1],u:/kg|㎏/i.test(x[2])?'㎏':'ℓ'})})}
@@ -2731,13 +2731,13 @@ function pqNorm(p){if(!p||typeof p!='object')return p;
  return p}
 function applySpec(p,s,over){s={...s};const u=[],set=(k,v,l)=>{if(v!=null&&v!==''&&p[k]!==v){p[k]=v;u.push(l)}},tx=(k,v,l)=>{if(v&&(over||!p[k])&&p[k]!==v){p[k]=v;u.push(l)}};
 tx('g',s.g,'일반명');tx('sp',s.sp,'표면처리');tx('us',s.us,'용도');set('pks',s.pks,'포장규격');tx('d',s.d,'제품설명');tx('tn',s.tn,'전용 희석제');tx('tc',s.tc,'희석제코드');
-if(s.ths>0&&(over||!(+p.ths))&&(+p.ths!==s.ths||p.thu!==s.thu)){p.ths=s.ths;p.thu=s.thu||'L';u.push('TDS 이론도포율 '+s.ths+'㎡/'+p.thu)}set('svr',s.svr,'SVR(고형분 용적비)');set('sg',s.sg,'비중');set('dft',s.dft,'추천도막');set('tr',s.tr,'희석율');set('pre',s.pre,'선행도장');set('nxt',s.nxt,'후속도장');
+if(s.ths>0&&(over||!(+p.ths))&&(+p.ths!==s.ths||p.thu!==s.thu||p.thr!==s.thr)){p.ths=s.ths;p.thu=s.thu||'L';if(s.thr)p.thr=s.thr;else delete p.thr;u.push('TDS 이론도포율 '+(s.thr||s.ths)+'㎡/'+p.thu)}set('svr',s.svr,'SVR(고형분 용적비)');set('sg',s.sg,'비중');set('dft',s.dft,'추천도막');set('tr',s.tr,'희석율');set('pre',s.pre,'선행도장');set('nxt',s.nxt,'후속도장');
 if(!lkSpec(p)&&s.pack&&(over||!(+p.mk))){p.mk=s.pack;p.pk=s.pack;p.un=s.pun;u.push('규격')}
 if(lkSpec(p)){}else if(s.pk&&s.mk){if(+p.pk!==s.pk||+p.mk!==s.mk){p.pk=s.pk;p.mk=s.mk;if(s.pun)p.un=s.pun;u.push('주제·경화제 규격')}}
 else if(s.mixa&&s.mixb){const m=+p.mk||0,a=+p.pk||0;if(m>0){const v=+(m*s.mixa/(s.mixa+s.mixb)).toFixed(2);if(a!==v){p.pk=v;u.push('혼합비·출고규격')}}else if(a>0){p.mk=+(a*(s.mixa+s.mixb)/s.mixa).toFixed(2);u.push('혼합비·혼합규격')}}
 if(+p.svr&&+p.dft){const v=+(p.svr*10/p.dft).toFixed(4);if(+p.th!==v){p.th=v;u.push('이론 도포율')}}
 if(s.mf&&!p.mf){p.mf=s.mf;u.push('제조사')}
-if(bigPack(p))u.push('대포장 규격');pqNorm(p);return u}
+if(+p.ths>0&&(!(+p.dft)||(over&&!s.dft))&&+p.svr&&(p.thu!='kg'||+p.sg>0)){const l=1/(p.thu=='kg'?p.ths*p.sg:p.ths);p.dft=Math.round(l*p.svr*10);u.push('추천도막 '+p.dft+'㎛ (도포율 환산)')}if(bigPack(p))u.push('대포장 규격');pqNorm(p);return u}
 async function afTds(files,nf){files=[...(files||[])].filter(f=>f);if(!files.length)return;const R=[],isImg=f=>/^image\//.test(f.type)||/\.(png|jpe?g|webp|bmp)$/i.test(f.name);let i=0;
 for(const f of files){i++;const pre=files.length>1?'('+i+'/'+files.length+') ':'';
 if(!isImg(f)&&!/pdf/i.test(f.type+f.name)){R.push({f:f.name,err:'PDF·이미지가 아님'});continue}
@@ -6579,7 +6579,7 @@ window.dsSecs=function(p){
   +cell('layers','g','희석제',tnv,{sm:1})
   +cell('shield','o','SVR (고형분 용적비)',p.svr?p.svr+'%':'')
   +cell('timer','r','추천도막',p.dft?p.dft+'μm':'')
-  +cell('drop','b','이론 도장면적 (L·kg당 · 로스 제외)'+(+p.ths>0?' · TDS 기재':''),area,{sm:1})
+  +cell('drop','b','이론 도장면적 (L·kg당 · 로스 제외)'+(+p.ths>0?(p.thr?' · TDS '+p.thr+' 범위 중간값':' · TDS 기재'):''),area,{sm:1})
   +cell('drop','o','이론 소요량 (로스 제외 · 계산값과 동일)',thq(p)?F(thq(p),3)+(u=='kg'?' kg/㎡':' L/㎡'):'',{sm:1})
   +cell('grid','p','혼합규격당 도장면적',cov1(p)?F(cov1(p),1)+'㎡':'');
  const R=String(p.dry||'').split(/[;\n]/).map(x=>x.trim()).filter(Boolean).map(r=>r.split('/').map(x=>x.trim())).sort((a,b)=>dsTemp(a)-dsTemp(b)).slice(0,5);
@@ -15438,4 +15438,5 @@ window.addEventListener('resize',q);
 })();
 </script>
 <style id="dsa593">html body #dsp#dsp .dsa{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:calc(var(--u)*6)!important}html body #dsp#dsp .dsa button{padding:0 2px!important;gap:calc(var(--u)*3)!important;min-width:0!important}html body #dsp#dsp .dsa button span{font-size:calc(var(--u)*17)!important}html body #dsp#dsp .dsa button svg{width:calc(var(--u)*20)!important;height:calc(var(--u)*20)!important}html body #dsp#dsp .dsa button.pd{background:#c9252f!important;color:#fff!important;border-color:#c9252f!important}</style>
+<style id="sh593">html body #sh{bottom:var(--gnh,50px)!important}html body #sh .shb{max-height:calc(100dvh - var(--gnh,50px) - 16px)!important;overflow-y:auto!important;padding-bottom:12px!important}</style>
 </body></html>
