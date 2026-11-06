@@ -2495,7 +2495,7 @@ const A=+S.area||1,v=x=>`<span class=cv>${x}</span>`;let sec='',rows='',pr='',to
 S.coats.forEach((c,i)=>{const r=calc(c),hh=$('#h'+i),el=$('#r'+i),o=od(i+1);if(hh)hh.textContent='';if(el)el.innerHTML='';const te=$('#th'+i),ae=$('#ac'+i),ce=$('#ca'+i);if(ce){ce.textContent='자동 계산됩니다.';ce.classList.add('emp')}if(te){te.textContent='자동 계산됩니다.';te.classList.add('emp')}if(ae){ae.textContent='자동 계산됩니다.';ae.classList.add('emp')}
 if(!r)return;
 any=1;const p=PC(c.n),Ac=+c.area||A,s=r.reduce((a,x)=>a+x.amt,0),a=r[0],t=r[1],m=mx(p),u=UN(p);const pa=Ac>0?f10(a.amt*Ac):0,da=t&&Ac>0?f10(t.amt*Ac):0,ct=pa+da;tot+=s;T2+=ct;sM+=a.amt;sT+=t?t.amt:0;sTh+=a.th;sAc+=a.ac;
-const cA=a.ac>0?a.pk/a.ac:0;if(hh)hh.textContent=`실제 ${F(a.ac)}${u}/㎡ · ㎡당 ${F(s,0)}원`+(cA>0?` · 캔당 ${F(cA,1)}㎡`:'');{const ce2=$('#ca'+i);if(ce2&&cA>0){ce2.textContent=F(cA,1);ce2.classList.remove('emp')}}if(te){te.textContent=F(a.th);te.classList.remove('emp')}if(ae){ae.textContent=F(a.ac);ae.classList.remove('emp')}
+const cA=a.ac>0?a.pk/a.ac:0;if(hh)hh.textContent=`${tdsHh(p,u,a)} · ㎡당 ${F(s,0)}원`+(cA>0?` · 캔당 ${F(cA,1)}㎡`:'');{const ce2=$('#ca'+i);if(ce2&&cA>0){ce2.textContent=F(cA,1);ce2.classList.remove('emp')}}if(te){te.textContent=F(a.th);te.classList.remove('emp')}if(ae){ae.textContent=F(a.ac);ae.classList.remove('emp')}tdsFx(p,u,a,te,ae);
 let cc=0;r.forEach(x=>{cc+=Math.ceil(x.ac*Ac/x.pk-1e-9)*x.pk*x.u});buy+=cc;
 const nq=x=>{const q=x.ac*Ac,k=Math.ceil(q/x.pk-1e-9);return Ac>0?`${F(q)}${x===a?u:'L'} → ${k}말`:'면적 입력 시 표시'};
 const nqs=Ac>0?'제품 '+nq(a)+(t?' · 희석제 '+nq(t):''):'면적 입력 시 표시';
@@ -2774,6 +2774,9 @@ const dryC=s=>{const R=String(s).split(/[;\n]/).map(x=>x.trim()).filter(Boolean)
 return `<div class=dka1><div class=dkc><div class=dkc0><span></span><span>지촉</span><span>고화</span><span>완전경화</span></div>${R.map(c=>{const mn=has(c[4]),mxv=has(c[5]);return `<div class=dkb style="${dtc(c[0])}"><div class=dkm><span class=dkt>${c[0]||'?'}</span><span class=dkx>${dfm(c[1])}</span><span class=dkx>${dfm(c[2])}</span><span class=dkx>${dfm(c[3])}</span></div><div class=dkq><span class=dkrl>재도장 간격</span>${mn||mxv?`<span class=dkrv><em>최소</em><span class=dkx>${dfm(c[4])}</span><i>→</i><em>최대</em><span class=dkx>${dfm(c[5]||'')}</span></span>`:'<span class=dn>–</span>'}</div></div>`}).join('')}</div></div><div class=hint>지촉: 손에 묻지 않는 시간 · 고화: 눌러도 자국이 없는 시간 · 완전경화: 사용 가능 상태 · 재도장: 다음 코트 도장 가능 간격(최소~최대)</div>`};
 const spec=p=>{const m=+p.mk||+p.pk||0,a=+p.pk||0,u=UN(p),two=m>a&&a>0;return `<div class=w><table><tr><th>주제 출고규격<th>경화제 규격<th>혼합규격(1말)<th>혼합비(주:경)</tr><tr><td>${F(a||m)}${u}<td>${two?F(m-a)+u:'-'}<td>${F(m)}${u}<td>${two?F(a/(m-a),2)+' : 1':'단액형'}</table></div>`};
 const dry=p=>(p.dry||p.pot)?(p.pot?`<div class=dpot><span>가사시간</span><b>${esc(p.pot)}</b></div>`:'')+(p.dry?dryC(p.dry)+(p.dsrc?'<div class=hint>TDS에서 자동 추출 · 원문과 대조 필요</div>':''):''):'';
+const tdsFx=(p,u,a,te,ae)=>{try{const lbs=e=>e&&e.parentElement&&e.parentElement.querySelector('.lb span');const on=p&&+p.ths>0&&a&&a.th>0&&a.ac>0,tu=on?(p.thu=='kg'?'kg':'L'):u,cv=v=>{let c=1/v;if(on&&tu!=u&&+p.sg>0)c=tu=='kg'?c/p.sg:c*p.sg;return c};
+ [[te,a&&a.th,'이론',u],[ae,a&&a.ac,'실제',u]].forEach(([e,v,nm,u0])=>{const l=lbs(e);if(!e||!l)return;if(on){l.textContent=nm+' 도포율 (㎡/'+tu+')';e.textContent=F(cv(v),2)}else l.textContent=nm+' 소요량 ('+u0+'/m²)'})}catch(_){}};
+const tdsHh=(p,u,a)=>{if(p&&+p.ths>0&&a&&a.ac>0){const tu=p.thu=='kg'?'kg':'L';let c=1/a.ac;if(tu!=u&&+p.sg>0)c=tu=='kg'?c/p.sg:c*p.sg;return '실제 '+F(c,2)+'㎡/'+tu}return '실제 '+F(a.ac)+u+'/㎡'};
 const tsL=p=>{const v=+p.ths;if(!(v>0))return 0;return p.thu=='kg'?(+p.sg>0?v*p.sg:0):v};
 const thc=p=>tsL(p)||(p.dft&&p.svr?p.svr*10/p.dft:(UN(p)=='kg'?0:+p.th||0));
 const thq=p=>{const d=+p.dft,v=+p.svr,ts=tsL(p);if(ts)return 1/ts*(UN(p)=='kg'&&+p.sg>0?+p.sg:1);if(!d||!v)return 0;return d/(v*10)*(UN(p)=='kg'&&+p.sg>0?+p.sg:1)};
@@ -15165,8 +15168,8 @@ window.syCCup=function(){try{SY.layers.forEach(function(c,i){var d=syLay(i),h=do
  var st=function(e,t,emp){if(e){e.textContent=t;e.classList.toggle('emp',!!emp)}};
  if(!d.r){if(h)h.textContent='';st(te,'자동 계산됩니다.',1);st(ae,'자동 계산됩니다.',1);st(ce,'자동 계산됩니다.',1);return}
  var s=d.r.reduce(function(a,x){return a+x.amt},0),cA=d.a.ac>0?d.a.pk/d.a.ac:0;
- if(h)h.textContent='실제 '+F(d.a.ac)+d.u+'/㎡ · ㎡당 '+F(s,0)+'원'+(cA>0?' · 캔당 '+F(cA,1)+'㎡':'');
- st(te,F(d.a.th));st(ae,F(d.a.ac));st(ce,cA>0?F(cA,1):'자동 계산됩니다.',cA<=0)})}catch(e){}};
+ if(h)h.textContent=((function(){try{return tdsHh(PC(c.n),d.u,d.a)}catch(_){return '실제 '+F(d.a.ac)+d.u+'/㎡'}})())+' · ㎡당 '+F(s,0)+'원'+(cA>0?' · 캔당 '+F(cA,1)+'㎡':'');
+ st(te,F(d.a.th));st(ae,F(d.a.ac));try{tdsFx(PC(c.n),d.u,d.a,te,ae)}catch(_){}st(ce,cA>0?F(cA,1):'자동 계산됩니다.',cA<=0)})}catch(e){}};
 /* 일위대가표(#cs) 스타일을 도장 시스템(#v3)에도 그대로 적용 */
 var done=0;function clone(){if(done)return;done=1;var out=[];
  function walk(rs,wrap){for(var i=0;i<rs.length;i++){var r=rs[i];if(r.cssRules&&!r.selectorText){var inner=[];walk(r.cssRules,inner);if(inner.length){var head=r.cssText.slice(0,r.cssText.indexOf('{')+1);out.push(head+inner.join('\n')+'}')}continue}
