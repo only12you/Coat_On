@@ -2777,6 +2777,7 @@ const dry=p=>(p.dry||p.pot)?(p.pot?`<div class=dpot><span>가사시간</span><b>
 const tdsFx=(p,u,a,te,ae)=>{try{const lbs=e=>e&&e.parentElement&&e.parentElement.querySelector('.lb span');const on=p&&+p.ths>0&&a&&a.th>0&&a.ac>0,tu=on?(p.thu=='kg'?'kg':'L'):u,cv=v=>{let c=1/v;if(on&&tu!=u&&+p.sg>0)c=tu=='kg'?c/p.sg:c*p.sg;return c};
  [[te,a&&a.th,'이론',u],[ae,a&&a.ac,'실제',u]].forEach(([e,v,nm,u0])=>{const l=lbs(e);if(!e||!l)return;if(on){l.textContent=nm+' 도포율 (㎡/'+tu+')';e.textContent=F(cv(v),2)}else l.textContent=nm+' 소요량 ('+u0+'/m²)'})}catch(_){}};
 const tdsHh=(p,u,a)=>{if(p&&+p.ths>0&&a&&a.ac>0){const tu=p.thu=='kg'?'kg':'L';let c=1/a.ac;if(tu!=u&&+p.sg>0)c=tu=='kg'?c/p.sg:c*p.sg;return '실제 '+F(c,2)+'㎡/'+tu}return '실제 '+F(a.ac)+u+'/㎡'};
+const rgT=p=>{try{const m=String(p.thr||'').match(/([\d.]+)~([\d.]+)/);if(!m||!(+p.ths>0))return null;const u=UN(p),tu=p.thu=='kg'?'kg':'L';if(tu!=u)return null;const lo=+m[1],hi=+m[2],f=F,mm=mx(p).m;let d='';if(+p.svr>0){const k=tu=='kg'?(+p.sg>0?+p.sg:0):1;if(k)d=f(p.svr*10/(hi*k),0)+'~'+f(p.svr*10/(lo*k),0)+'㎛'}return{a:f(lo,1)+'~'+f(hi,1)+'㎡/'+tu,q:f(1/hi,2)+'~'+f(1/lo,2)+' '+u+'/㎡',c:mm>0?f(mm*lo,0)+'~'+f(mm*hi,0)+'㎡':'',d}}catch(_){return null}};
 const tsL=p=>{const v=+p.ths;if(!(v>0))return 0;return p.thu=='kg'?(+p.sg>0?v*p.sg:0):v};
 const thc=p=>tsL(p)||(p.dft&&p.svr?p.svr*10/p.dft:(UN(p)=='kg'?0:+p.th||0));
 const thq=p=>{const d=+p.dft,v=+p.svr,ts=tsL(p);if(ts)return 1/ts*(UN(p)=='kg'&&+p.sg>0?+p.sg:1);if(!d||!v)return 0;return d/(v*10)*(UN(p)=='kg'&&+p.sg>0?+p.sg:1)};
@@ -5595,7 +5596,7 @@ function dbxInfo(p){
  +sc('brush','표면처리',fx('표면처리',p.sp,{w:1}))
  +sc('box','포장단위 / 혼합규격',fx('포장단위 (주제:경화제)',two?F(m.a)+u+' : '+F(m.b)+u:(+p.pk?F(+p.pk)+u:''))+fx('혼합규격',two?F(m.a/m.b,2)+' : 1 ('+(u=='kg'?'무게비':'부피비')+')':'단액형')+(p.pks?fx('데이터시트 포장규격',p.pks,{w:1}):''))
  +sc('drop','기본 물성',fx('단위',u)+fx(u=='kg'?'비중 (kg)':'비중',p.sg?F(+p.sg,2):'')+fx('고형분용적비 (SVR)',p.svr?p.svr+'%':''),'g3')
- +sc('roller','도장 사양',fx('혼합규격 (총량)',F(m.m)+u)+fx('추천도막 (1회도장)',p.dft,{sfx:'μm'})+fx('희석제 (규격)',tn)+fx('희석율 (%)',+p.tr?F(p.tr*100,1)+'%':'')+fx('이론 도장면적 (L·kg당 · 로스 제외)',area,{s3:1})+fx('이론 소요량 (로스 제외 · 계산값과 동일)',thq(p)?F(thq(p),3)+(UN(p)=='kg'?' kg/㎡':' L/㎡'):'',{s3:1})+fx('혼합규격당 도장면적 (말당 면적)',cov1(p)?F(cov1(p),1)+'㎡':'',{s3:1}),'g3')
+ +sc('roller','도장 사양',fx('혼합규격 (총량)',F(m.m)+u)+fx('추천도막 (1회도장)',p.dft,{sfx:'μm'})+fx('희석제 (규격)',tn)+fx('희석율 (%)',+p.tr?F(p.tr*100,1)+'%':'')+fx('이론 도장면적 (L·kg당 · 로스 제외)',rgT(p)?rgT(p).a:area,{s3:1})+fx('이론 소요량 (로스 제외 · 계산값과 동일)',rgT(p)?rgT(p).q:(thq(p)?F(thq(p),3)+(UN(p)=='kg'?' kg/㎡':' L/㎡'):''),{s3:1})+fx('혼합규격당 도장면적 (말당 면적)',rgT(p)&&rgT(p).c?rgT(p).c:(cov1(p)?F(cov1(p),1)+'㎡':''),{s3:1}),'g3')
  +sc('clock','건조/가사 시간',fx('건조시간 (지촉/경화)',dry)+fx('가사시간',p.pot)+(R.length?`<details class="dxm w"><summary>온도별 건조시간 · 재도장 간격 보기</summary>${dbxDry(p)}</details>`:''))
  +sc('layers','도장 시스템',fx('선행도장',p.pre)+fx('후속도장',p.nxt))
  +sc('doc','기타 정보',fx('출처',link||p.mf||'',{raw:!!link,w:1})+fx('TDS 개정일',p.rev)+fx('자료확인일',p.chk))
@@ -6581,10 +6582,10 @@ window.dsSecs=function(p){
   +cell('box','v','출고규격',two?F(m.a)+u+' : '+F(m.b)+u:F(m.a)+u)
   +cell('layers','g','희석제',tnv,{sm:1})
   +cell('shield','o','SVR (고형분 용적비)',p.svr?p.svr+'%':'')
-  +cell('timer','r','추천도막',p.dft?p.dft+'μm':'')
-  +cell('drop','b','이론 도장면적 (L·kg당 · 로스 제외)'+(+p.ths>0?(p.thr?' · TDS '+p.thr+' 범위 중간값':' · TDS 기재'):''),area,{sm:1})
-  +cell('drop','o','이론 소요량 (로스 제외 · 계산값과 동일)',thq(p)?F(thq(p),3)+(u=='kg'?' kg/㎡':' L/㎡'):'',{sm:1})
-  +cell('grid','p','혼합규격당 도장면적',cov1(p)?F(cov1(p),1)+'㎡':'');
+  +cell('timer','r','추천도막'+(rgT(p)&&rgT(p).d?' (TDS 범위 '+rgT(p).d+')':''),p.dft?p.dft+'μm':'')
+  +cell('drop','b','이론 도장면적 (L·kg당 · 로스 제외)'+(+p.ths>0?(p.thr?' · TDS '+p.thr+' 범위 중간값':' · TDS 기재'):''),rgT(p)?rgT(p).a:area,{sm:1})
+  +cell('drop','o','이론 소요량 (로스 제외 · 계산값과 동일)',rgT(p)?rgT(p).q:(thq(p)?F(thq(p),3)+(u=='kg'?' kg/㎡':' L/㎡'):''),{sm:1})
+  +cell('grid','p','혼합규격당 도장면적',rgT(p)&&rgT(p).c?rgT(p).c:(cov1(p)?F(cov1(p),1)+'㎡':''));
  const R=String(p.dry||'').split(/[;\n]/).map(x=>x.trim()).filter(Boolean).map(r=>r.split('/').map(x=>x.trim())).sort((a,b)=>dsTemp(a)-dsTemp(b)).slice(0,5);
  let dry='';
  if(R.length){const n=R.length,cols=n+1,hc=c=>{const tv=dsTemp(c);return `<div class="h ${TCOL(tv)}">${I(tv<=12?'snow':'sun')}<span>${esc(dbxTl(c))}</span></div>`};
