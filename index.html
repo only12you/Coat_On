@@ -2786,7 +2786,7 @@ return IC('k1','제품설명',p.d)+IC('k2','용도',p.us||(p.g?'일반명: '+p.g
 +T('k1','출고규격',two?'주제 '+F(m.a)+' : 경화제 '+F(m.b):F(m.a)+u+' (단액형)',{big:1,w:1})
 +T('k1','희석제',tn,{big:1,w:1})
 +T('k2','SVR(고형분 용적비)',p.svr?p.svr+'%':'-',{big:1,l:1})+T('k2','추천도막',p.dft?p.dft+'㎛':'-',{big:1})
-+T('k2','이론 도장면적 (L·kg당 · 로스 제외)',t?(UN(p)=='kg'&&+p.sg>0?F(t/p.sg)+'㎡/kg':F(t)+'㎡/L'):'-',{big:1,w:1,one:1})
++T('k2','이론 도장면적 (L·kg당 · 로스 제외)',t?(UN(p)=='kg'&&+p.sg>0?F(t/p.sg)+'㎡/kg':F(t)+'㎡/L'):'-',{big:1,w:1,one:1})+T('k2','이론 소요량 (로스 제외 · 계산값과 동일)',thq(p)?F(thq(p),3)+(UN(p)=='kg'?' kg/㎡':' L/㎡'):'-',{big:1,w:1,one:1})
 +T('k2','비중',p.sg?F(p.sg):'-',{big:1,l:1})+T('k2','1말당 이론면적',cov1(p)?F(cov1(p),1)+'㎡':'-',{big:1})
 +T('k4','선행도장',p.pre||'-',{l:1})+T('k4','후속도장',p.nxt||'-',{})
 +`</div></details>`};
@@ -5591,7 +5591,7 @@ function dbxInfo(p){
  +sc('brush','표면처리',fx('표면처리',p.sp,{w:1}))
  +sc('box','포장단위 / 혼합규격',fx('포장단위 (주제:경화제)',two?F(m.a)+u+' : '+F(m.b)+u:(+p.pk?F(+p.pk)+u:''))+fx('혼합규격',two?F(m.a/m.b,2)+' : 1 ('+(u=='kg'?'무게비':'부피비')+')':'단액형')+(p.pks?fx('데이터시트 포장규격',p.pks,{w:1}):''))
  +sc('drop','기본 물성',fx('단위',u)+fx(u=='kg'?'비중 (kg)':'비중',p.sg?F(+p.sg,2):'')+fx('고형분용적비 (SVR)',p.svr?p.svr+'%':''),'g3')
- +sc('roller','도장 사양',fx('혼합규격 (총량)',F(m.m)+u)+fx('추천도막 (1회도장)',p.dft,{sfx:'μm'})+fx('희석제 (규격)',tn)+fx('희석율 (%)',+p.tr?F(p.tr*100,1)+'%':'')+fx('이론 도장면적 (L·kg당 · 로스 제외)',area,{s3:1})+fx('혼합규격당 도장면적 (말당 면적)',cov1(p)?F(cov1(p),1)+'㎡':'',{s3:1}),'g3')
+ +sc('roller','도장 사양',fx('혼합규격 (총량)',F(m.m)+u)+fx('추천도막 (1회도장)',p.dft,{sfx:'μm'})+fx('희석제 (규격)',tn)+fx('희석율 (%)',+p.tr?F(p.tr*100,1)+'%':'')+fx('이론 도장면적 (L·kg당 · 로스 제외)',area,{s3:1})+fx('이론 소요량 (로스 제외 · 계산값과 동일)',thq(p)?F(thq(p),3)+(UN(p)=='kg'?' kg/㎡':' L/㎡'):'',{s3:1})+fx('혼합규격당 도장면적 (말당 면적)',cov1(p)?F(cov1(p),1)+'㎡':'',{s3:1}),'g3')
  +sc('clock','건조/가사 시간',fx('건조시간 (지촉/경화)',dry)+fx('가사시간',p.pot)+(R.length?`<details class="dxm w"><summary>온도별 건조시간 · 재도장 간격 보기</summary>${dbxDry(p)}</details>`:''))
  +sc('layers','도장 시스템',fx('선행도장',p.pre)+fx('후속도장',p.nxt))
  +sc('doc','기타 정보',fx('출처',link||p.mf||'',{raw:!!link,w:1})+fx('TDS 개정일',p.rev)+fx('자료확인일',p.chk))
@@ -6579,6 +6579,7 @@ window.dsSecs=function(p){
   +cell('shield','o','SVR (고형분 용적비)',p.svr?p.svr+'%':'')
   +cell('timer','r','추천도막',p.dft?p.dft+'μm':'')
   +cell('drop','b','이론 도장면적 (L·kg당 · 로스 제외)',area,{sm:1})
+  +cell('drop','o','이론 소요량 (로스 제외 · 계산값과 동일)',thq(p)?F(thq(p),3)+(u=='kg'?' kg/㎡':' L/㎡'):'',{sm:1})
   +cell('grid','p','혼합규격당 도장면적',cov1(p)?F(cov1(p),1)+'㎡':'');
  const R=String(p.dry||'').split(/[;\n]/).map(x=>x.trim()).filter(Boolean).map(r=>r.split('/').map(x=>x.trim())).sort((a,b)=>dsTemp(a)-dsTemp(b)).slice(0,5);
  let dry='';
