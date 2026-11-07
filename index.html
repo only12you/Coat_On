@@ -14765,6 +14765,7 @@ function go(k){
   if(k=='env')return lccTab(1);
   if(k=='dg')return lccTab(2);
   if(k=='rp')return lccTab(5);
+  if(k=='sp')return lccTab(3);
   if(k=='cmp')return lccTab(4);
   if(k=='set'&&typeof openSettings=='function')return openSettings();
   if(k=='bell'){var s=stats();return tt(s.urg?('긴급 보수 대상 '+s.urg+'곳 (R·O 등급)'):'새 알림이 없습니다')}
@@ -14994,12 +14995,7 @@ function html(){
  +'<div class="lh-kpi"><button class="k k1" data-go="env">'+BLD+'<div><small>진단 대상 '+(ok?(M.a.t||'자산'):'자산')+'</small><b>'+(ok?esc(M.a.n):'미등록')+CH+'</b></div></button>'
  +'<div class="k k2">'+LEAF+'<div><small>LCC 절감효과</small><b>'+(ok?F1(Math.max(0,M.sv))+'<em>%</em>':'–')+'</b></div></div>'
  +'<div class="k k3">'+CLOUD+'<div><small>탄소저감 효과</small><b>'+(ok?F1(M.co)+'<em>tCO₂</em>':'–')+'</b></div></div></div>'
- +'<div class="lh-tiles">'
- +'<button class="lh-t t1" data-go="calc">'+ic('calc')+'<b>산출</b><small>견적·물량</small></button>'
- +'<button class="lh-t t2" data-go="lcc0">'+ic('chart')+'<b>분석</b><small>LCC·진단</small></button>'
- +'<button class="lh-t t3" data-go="db">'+ic('db')+'<b>DB</b><small>제품·사양</small></button>'
- +'<button class="lh-t t4" data-go="dg">'+ic('ai')+'<b>AI 진단</b><small>도막·열화</small></button>'
- +'<button class="lh-t t5" data-go="rp">'+ic('doc')+'<b>보고서</b><small>분석결과</small></button></div><div class="lh-ulw"><i></i></div>';
+ +'<nav class="lxsb lh-st" aria-label="LCC 단계">'+[['환경개요','env'],['도막 결함','dg'],['ISO 사양추천','sp'],['비용분석','cmp'],['보수계획','rp']].map(function(t,i){return '<button type="button" data-go="'+t[1]+'"><i>'+(i+1)+'</i><span>'+t[0]+'</span></button>'}).join('')+'</nav>';
  /* LCC 분석 */
  h+='<section class="lh-card"><div class="lh-ch">'+BARS+'<div class="mtx"><h3>LCC 분석</h3><p>최적의 도장시스템을 제안합니다</p></div><button class="lh-more" data-go="lcc0">상세보기 '+CH+'</button></div><div class="lh-lcc"><div class="lh-lcc-w">'
  +(ok?'<div class="lh-ring">'+ring(M)+'<div class="ct"><small>최적안</small><b>'+LET[M.best]+'안</b><i>'+P('<path d="M5 12.5l4.5 4.5L19 7.5"/>')+'</i></div></div>'
@@ -15697,4 +15693,5 @@ window.syEdUi=syEdUi=function(){
 };
 var HU;function hero(){if(HU!==undefined)return HU;HU='';try{document.querySelectorAll('style').forEach(function(st){if(HU)return;var m=/#hx\.hn1 \.hni\{background:[^}]*?url\((data:image\/jpeg;base64,[A-Za-z0-9+\/=]+)\)/.exec(st.textContent);if(m)HU=m[1]})}catch(e){}return HU}
 })()</script>
+<style id="lhs593">html body #v9 #lhd .lxsb.lh-st{position:relative!important;top:auto!important;margin:calc(var(--k)*18) 0 0!important;box-shadow:0 6px 18px rgba(40,90,170,.10)}</style>
 </body></html>
