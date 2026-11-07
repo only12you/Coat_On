@@ -15564,7 +15564,7 @@ window.hdr=hdr=function(n){if(!(n==3&&window.SYM=='db')){window.SYPK=0;window.SY
 <style id="sx593">
 html body #syed#syed.sx{position:fixed!important;inset:0!important;z-index:2147483450!important;display:flex!important;flex-direction:column;padding:0!important;background:linear-gradient(165deg,#0a4fd1 0,#1766e6 55%,#2f80f0 100%)!important;align-items:stretch!important;justify-content:flex-start!important;font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif}
 #syed.sx *{box-sizing:border-box}
-#syed.sx .sx-hd{flex:none;display:flex;align-items:center;gap:14px;padding:max(env(safe-area-inset-top,0px),44px) 18px 0;height:calc(max(env(safe-area-inset-top,0px),44px) + 56px);color:#fff}
+#syed.sx .sx-hd{flex:none;display:flex;align-items:flex-end;gap:14px;padding:calc(env(safe-area-inset-top,0px) + 12px) 18px 16px;min-height:calc(env(safe-area-inset-top,0px) + 112px);color:#fff;background-size:cover;background-position:center right}
 #syed.sx .sx-hd b{flex:1;font-size:22px;font-weight:700;letter-spacing:-.3px}
 #syed.sx .sx-hd button{width:32px;height:32px;border:0;background:none;color:#fff;display:grid;place-items:center;padding:0}
 #syed.sx .sx-hd svg{width:26px;height:26px}
@@ -15593,7 +15593,11 @@ html body #syed#syed.sx .sx-d input{flex:1;min-width:0;width:100%;border:0!impor
 #syed.sx .sx-d em{font-style:normal;font-size:12.5px;color:#7d8aa6}
 #syed.sx .sx-m{width:30px;height:30px;border-radius:50%;border:1.5px solid #9db8ea;background:#fff;color:#1d63d8;padding:0;display:grid;place-items:center}
 #syed.sx .sx-m svg{width:14px;height:14px}
-#syed.sx .sx-r .se-sg{grid-column:2/4;position:absolute;top:100%;left:64px;right:0;z-index:5}
+html body #syed#syed.sx .se-sg{position:relative!important;left:auto!important;right:auto!important;top:auto!important;transform:none!important;width:auto!important;box-sizing:border-box;z-index:1;margin:-4px 0 10px 24px!important;border-radius:10px!important;max-height:210px!important}
+#syed.sx .se-sgi{min-height:40px!important;padding:6px 12px!important}
+#syed.sx .se-sgi b{font-size:14.5px!important;line-height:18px!important}
+#syed.sx .se-sgi small{font-size:12px!important}
+#syed.sx .se-sgn{padding:10px 12px;font-size:12.5px;color:#5d6f90}
 #syed.sx .sx-add{width:100%;height:38px;margin-top:2px;border:1px solid #c7d6f2;border-radius:10px;background:#e7effc;color:#1b4eb5;font:700 16px system-ui,"Noto Sans KR";display:flex;align-items:center;justify-content:center;gap:8px;padding:0}
 #syed.sx .sx-add svg{width:22px;height:22px}
 #syed.sx .sx-tot{display:flex;align-items:center;gap:10px;margin-top:11px;height:42px;padding:0 14px;border-radius:10px;background:#e2ecfb;font-weight:700;color:#1b3a86;font-size:16px}
@@ -15661,7 +15665,7 @@ window.syEdUi=syEdUi=function(){
   return '<div class="sx-r '+KC(cur)+'"><span class="sx-pl '+KC(cur)+'" style="border-radius:17px !important;clip-path:inset(0 round 17px)">'+esc(cur)+'<select onchange="SYE.e.items['+i+'].lb=this.value;syEdUi()" aria-label="구분">'+LBS.map(function(x){return '<option'+(cur==x?' selected':'')+'>'+x+'</option>'}).join('')+'</select></span>'
   +'<div class="sx-pw"><input style="border-radius:10px !important" type="text" autocomplete="off" value="'+esc(c.n)+'" placeholder="제품명·코드 입력" oninput="SYE.e.items['+i+'].n=this.value;syEdHint('+i+');syEdSg('+i+',-1,this.value)" onfocus="syEdSg('+i+',-1,this.value)" onblur="setTimeout(()=>syEdSgHide('+i+',-1),250)">'+IC.dn+'</div>'
   +'<div class="sx-d" style="border-radius:10px !important"><input type="number" inputmode="decimal" id="se-d'+i+'" value="'+esc(c.dft==null?'':c.dft)+'" placeholder="'+(p&&+p.dft?p.dft:'DFT')+'" onwheel="this.blur()" oninput="SYE.e.items['+i+'].dft=this.value;syXTot()"><em>μm</em></div>'
-  +'<button type="button" class="sx-m" style="border-radius:50% !important" onclick="SYE.e.items.splice('+i+',1);syEdUi()" aria-label="삭제">'+IC.minus+'</button><div class="se-sg" id="se-sg'+i+'_m" hidden></div></div>'}).join('');
+  +'<button type="button" class="sx-m" style="border-radius:50% !important" onclick="SYE.e.items.splice('+i+',1);syEdUi()" aria-label="삭제">'+IC.minus+'</button></div><div class="se-sg" id="se-sg'+i+'_m" hidden></div>'}).join('');
  var cd=s.items.map(function(c,i){return '<div class="sx-cd"><b>'+(i+1)+'. '+esc(c.lb||'미지정')+' '+esc(c.n||'')+'</b><div class="sx-dt">'+I(i,'cnt','횟수','1')+I(i,'mth','도장방법','B,R,S')+I(i,'thin','희석(최대)','≤5%')+I(i,'mix','혼합비','4:1 (부피비)')+I(i,'rc','재도장 간격','≥24시간')+I(i,'th','이론소요량','0.12 L/㎡')+I(i,'pot','가사시간','20℃ 4시간')+I(i,'svr','고형분 SVR(%)','58')+I(i,'nt','비고','',1)+'</div></div>'}).join('');
  var more='<details class="sx-mr"><summary>추가 설정 (코트별 상세·용도·사진·환경·대상·수명)</summary>'+cd
   +'<div class="se-g"><span>용도</span><div class="se-ch"><button type="button" class="'+((s.use||'est')=='est'?'on':'')+'" onclick="SYE.e.use=\'est\';syEdUi()">견적용</button><button type="button" class="'+(s.use=='lcc'?'on':'')+'" onclick="SYE.e.use=\'lcc\';syEdUi()">LCC용</button></div></div>'
@@ -15685,7 +15689,9 @@ window.syEdUi=syEdUi=function(){
  +more+'</div>'
  +'<div class="sx-ft"><button type="button" class="c" style="border-radius:12px !important" onclick="syEdClose()">취소</button><button type="button" class="s" style="border-radius:12px !important" onclick="syEdSave()">'+IC.ok+'저장</button></div>'
  +'<datalist id="sy-dl">'+(typeof DB!='undefined'?DB:[]).slice(0,3000).map(function(p){return '<option value="'+esc(p.n)+'">'}).join('')+'</datalist>';
+ var hd=e.querySelector('.sx-hd');if(hd){var u=hero();hd.style.backgroundImage=u?'linear-gradient(90deg,rgba(10,79,209,.95) 0,rgba(10,79,209,.55) 50%,rgba(10,79,209,.1) 100%),url('+u+')':'linear-gradient(165deg,#0a4fd1,#2f80f0)'}
  if(sc){var q=e.querySelector('.sx-bd');if(q)q.scrollTop=sc}
 };
+var HU;function hero(){if(HU!==undefined)return HU;HU='';try{document.querySelectorAll('style').forEach(function(st){if(HU)return;var m=/#hx\.hn1 \.hni\{background:[^}]*?url\((data:image\/jpeg;base64,[A-Za-z0-9+\/=]+)\)/.exec(st.textContent);if(m)HU=m[1]})}catch(e){}return HU}
 })()</script>
 </body></html>
